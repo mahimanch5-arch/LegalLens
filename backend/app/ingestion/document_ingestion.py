@@ -10,16 +10,16 @@ Coordinates the entire ingestion process:
 6. Store in vector database
 """
 
-from typing import Optional, Dict
 import logging
 import time
 from dataclasses import dataclass
+from typing import Any
 
-from document_loader import DocumentLoader, LoadedDocument
-from ocr_processor import get_ocr_processor
-from chunking import DocumentChunker, Chunk
+from chunking import DocumentChunker
+from document_loader import DocumentLoader
 from embedding_service import get_embedding_service
-from vector_store import get_vector_store, VectorStore
+from ocr_processor import get_ocr_processor
+from vector_store import get_vector_store
 
 logger = logging.getLogger(__name__)
 
@@ -34,10 +34,10 @@ class IngestionResult:
     total_tokens: int
     embeddings_generated: int
     is_scanned: bool
-    ocr_quality: Optional[float]  # Average OCR confidence if scanned
-    low_ocr_pages: list  # Pages with low OCR confidence
+    ocr_quality: float | None  # Average OCR confidence if scanned
+    low_ocr_pages: list[int]  # Pages with low OCR confidence
     elapsed_time: float
-    error_message: Optional[str] = None
+    error_message: str | None = None
 
 
 class DocumentIngestionPipeline:
@@ -57,7 +57,7 @@ class DocumentIngestionPipeline:
                  vector_store_type: str = "chroma",
                  chunk_size_tokens: int = 512,
                  chunk_overlap_percent: float = 0.20,
-                 **kwargs):
+                 **kwargs: Any) -> None:
         """
         Initialize ingestion pipeline.
 
@@ -181,9 +181,9 @@ class DocumentIngestionPipeline:
             True if successful
         """
         logger.info(f"Deleting document {document_id} from vector store...")
-        return self.vector_store.delete_document(document_id)
+        return bool(self.vector_store.delete_document(document_id))
 
-    def search_documents(self, query: str, top_k: int = 5) -> list:
+    def search_documents(self, query: str, top_k: int = 5) -> list[Any]:
         """
         Search documents using semantic search.
 
@@ -235,7 +235,7 @@ def ingest_document(file_path: str, document_id: str) -> IngestionResult:
     return pipeline.ingest(file_path, document_id)
 
 
-def search_documents(query: str, top_k: int = 5) -> list:
+def search_documents(query: str, top_k: int = 5) -> list[Any]:
     """
     Search ingested documents.
 
@@ -267,7 +267,7 @@ if __name__ == "__main__":
     result = pipeline.ingest(file_path, document_id)
 
     print(f"\n{'='*70}")
-    print(f"Ingestion Result")
+    print("Ingestion Result")
     print(f"{'='*70}")
     print(f"Success:             {result.success}")
     print(f"Document ID:         {result.document_id}")

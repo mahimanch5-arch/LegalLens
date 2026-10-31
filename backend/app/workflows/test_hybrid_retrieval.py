@@ -2,13 +2,10 @@
 Unit tests for HybridRetrieval module
 """
 
+from unittest.mock import Mock
+
 import pytest
-from unittest.mock import Mock, patch, MagicMock
-from hybrid_retrieval import (
-    RetrievalResult,
-    HybridRetriever,
-    ChromaVectorHybridRetriever
-)
+from hybrid_retrieval import ChromaVectorHybridRetriever, HybridRetriever, RetrievalResult
 
 
 class TestRetrievalResult:
@@ -206,7 +203,6 @@ class TestScoreAveraging:
 
         # Create identical chunk with different scores
         vector_score = 0.9
-        keyword_score = 0.8
 
         # Setup vector search result
         retriever.vector_store.similarity_search_with_score.return_value = [
@@ -272,7 +268,7 @@ class TestIntegration:
             results = retriever.hybrid_search("What is X?", top_k=5)
             # Should return a list of RetrievalResult or empty
             assert isinstance(results, list)
-        except Exception as e:
+        except Exception:
             # Expected if no vector store initialized
             pass
 

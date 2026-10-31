@@ -10,19 +10,17 @@ Classifies user queries into one of four intents:
 Uses fast heuristic rules first, falls back to Claude Haiku for edge cases.
 """
 
-import re
-from enum import Enum
-from typing import Optional
-from dataclasses import dataclass
-from pydantic import BaseModel
-from langchain_anthropic import ChatAnthropic
-from langchain_core.messages import HumanMessage, SystemMessage
 import os
-from dotenv import load_dotenv
+import re
+from dataclasses import dataclass
+from enum import StrEnum
 
 # Load environment variables from .env file (handle different working directories)
-import os
 from pathlib import Path
+
+from dotenv import load_dotenv
+from langchain_anthropic import ChatAnthropic
+from langchain_core.messages import HumanMessage, SystemMessage
 
 # Try to find and load .env file
 env_path = Path(__file__).parent / ".env"
@@ -33,7 +31,7 @@ else:
     load_dotenv()
 
 
-class Intent(str, Enum):
+class Intent(StrEnum):
     """Legal Lens intent types"""
     ASK = "ask"
     SUMMARY = "summary"
@@ -77,7 +75,7 @@ class IntentClassifier:
 
     ASK_MARKERS = {"?", "what", "how", "when", "where", "who", "why", "can", "will", "is"}
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the intent classifier with Claude Haiku"""
         api_key = os.getenv("ANTHROPIC_API_KEY")
         if not api_key:
@@ -102,7 +100,7 @@ class IntentClassifier:
     def classify(
         self,
         message: str,
-        document_scope: Optional[str] = None,
+        document_scope: str | None = None,
         conversation_history_length: int = 0
     ) -> ClassificationResult:
         """
@@ -213,7 +211,7 @@ class IntentClassifier:
     def _classify_llm(
         self,
         message: str,
-        document_scope: Optional[str] = None,
+        document_scope: str | None = None,
         conversation_history_length: int = 0
     ) -> ClassificationResult:
         """
@@ -275,7 +273,7 @@ Respond with ONLY the word: ask, summary, or draft (lowercase, no explanation)."
             )
 
     @staticmethod
-    def _contains_keywords(text: str, keywords: set) -> bool:
+    def _contains_keywords(text: str, keywords: set[str]) -> bool:
         """Check if text contains any of the given keywords (handles multi-word phrases)."""
         for keyword in keywords:
             # Use word boundaries for single words, simple substring for phrases
@@ -294,7 +292,7 @@ Respond with ONLY the word: ask, summary, or draft (lowercase, no explanation)."
 # Convenience function for testing
 def classify_intent(
     message: str,
-    document_scope: Optional[str] = None,
+    document_scope: str | None = None,
     conversation_history_length: int = 0
 ) -> ClassificationResult:
     """Classify a message into an intent (singleton pattern)."""

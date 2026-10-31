@@ -2,9 +2,10 @@
 Unit tests for Re-ranker module
 """
 
+from unittest.mock import Mock, patch
+
 import pytest
-from unittest.mock import Mock, patch, MagicMock
-from reranker import RankedResult, BGEReranker, RerankerPipeline
+from reranker import BGEReranker, RankedResult, RerankerPipeline
 
 
 class TestRankedResult:

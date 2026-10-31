@@ -5,9 +5,10 @@ Splits documents into semantic chunks for embedding and retrieval.
 Preserves clause/sentence boundaries and legal document structure.
 """
 
-from typing import List, Dict, Optional
-from dataclasses import dataclass
 import logging
+from dataclasses import dataclass
+from typing import Any
+
 from tiktoken import get_encoding
 
 logger = logging.getLogger(__name__)
@@ -23,9 +24,9 @@ class Chunk:
     token_count: int
     character_start: int  # Position in original document
     character_end: int
-    metadata: Dict = None
+    metadata: dict[str, Any] | None = None
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         if self.metadata is None:
             self.metadata = {}
 
@@ -78,7 +79,7 @@ class DocumentChunker:
     def chunk_document(self,
                       document_id: str,
                       text: str,
-                      metadata: Optional[Dict] = None) -> List[Chunk]:
+                      metadata: dict[str, Any] | None = None) -> list[Chunk]:
         """
         Split document into chunks.
 
@@ -151,7 +152,7 @@ class DocumentChunker:
         logger.info(f"Chunked document {document_id} into {len(chunks)} chunks")
         return chunks
 
-    def _recursive_split(self, text: str, separators: Optional[List[str]] = None) -> List[str]:
+    def _recursive_split(self, text: str, separators: list[str] | None = None) -> list[str]:
         """
         Recursively split text using separators in order.
         Tries to keep splits together until size limit, then moves to next separator.
@@ -215,7 +216,7 @@ class DocumentChunker:
 
                 # Take last n tokens
                 last_tokens = tokens[-n:]
-                return self.encoding.decode(last_tokens)
+                return str(self.encoding.decode(last_tokens))
             except Exception:
                 pass
 
@@ -230,7 +231,7 @@ def chunk_document(document_id: str,
                   text: str,
                   chunk_size_tokens: int = DocumentChunker.CHUNK_SIZE_TOKENS,
                   overlap_percent: float = DocumentChunker.CHUNK_OVERLAP_PERCENT,
-                  metadata: Optional[Dict] = None) -> List[Chunk]:
+                  metadata: dict[str, Any] | None = None) -> list[Chunk]:
     """
     Simple function to chunk a document.
 
@@ -250,7 +251,6 @@ def chunk_document(document_id: str,
 
 if __name__ == "__main__":
     # Test
-    import sys
 
     logging.basicConfig(level=logging.INFO)
 

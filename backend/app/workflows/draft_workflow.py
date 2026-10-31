@@ -11,19 +11,18 @@ Complete end-to-end workflow:
 """
 
 import logging
-from typing import List, Optional, Dict, Tuple
 from dataclasses import dataclass
-from enum import Enum
-import json
+from enum import StrEnum
+from typing import Any
 
-from langchain_anthropic import ChatAnthropic
 from hybrid_retrieval import HybridRetriever
-from reranker import RerankerPipeline, RankedResult
+from langchain_anthropic import ChatAnthropic
+from reranker import RankedResult, RerankerPipeline
 
 logger = logging.getLogger(__name__)
 
 
-class DraftType(str, Enum):
+class DraftType(StrEnum):
     """Draft document types"""
     MEMO = "memo"
     BRIEF = "brief"
@@ -37,18 +36,18 @@ class DraftParams:
     question_presented: str
     audience: str
     tone: str
-    source_documents: List[str]
+    source_documents: list[str]
 
 
 @dataclass
 class DraftResult:
     """Result of Draft workflow"""
     draft_params: DraftParams
-    retrieved_chunks: List[RankedResult]
+    retrieved_chunks: list[RankedResult]
     generated_draft: str
-    citations: List[Dict]
-    source_manifest: Dict
-    metadata: Dict = None
+    citations: list[dict[str, Any]]
+    source_manifest: dict[str, Any]
+    metadata: dict[str, Any] | None = None
 
 
 INTENT_EXTRACTION_PROMPT = """You are a legal research assistant extracting intent parameters for document drafting.
@@ -188,10 +187,10 @@ class DraftWorkflow:
                 source_documents=[]
             )
 
-    def _organize_sources(self, chunks: List[RankedResult]) -> Dict:
+    def _organize_sources(self, chunks: list[RankedResult]) -> dict[str, Any]:
         """Organize sources by document"""
 
-        sources = {}
+        sources: dict[str, list[Any]] = {}
         for chunk in chunks:
             doc_id = chunk.document_id
             if doc_id not in sources:
@@ -206,14 +205,14 @@ class DraftWorkflow:
 
         return sources
 
-    def _generate_draft(self, params: DraftParams, chunks: List[RankedResult]) -> str:
+    def _generate_draft(self, params: DraftParams, chunks: list[RankedResult]) -> str:
         """Generate draft using Claude Opus"""
 
         # Build context from chunks
-        context = "\n\n".join([f"[{i}] {c.text}" for i, c in enumerate(chunks, 1)])
+        _context = "\n\n".join([f"[{i}] {c.text}" for i, c in enumerate(chunks, 1)])
 
         # Get template
-        template = self._get_draft_template(params.document_type)
+        _template = self._get_draft_template(params.document_type)
 
         # TODO: Call Opus to fill template with citations
         logger.info(f"Generating {params.document_type} with Opus (audience: {params.audience})")
@@ -280,7 +279,7 @@ DISPOSITION
 [Final disposition]"""
 
     @staticmethod
-    def _extract_citations(draft_text: str, chunks: List[RankedResult]) -> List[Dict]:
+    def _extract_citations(draft_text: str, chunks: list[RankedResult]) -> list[dict[str, Any]]:
         """Extract citations from generated draft"""
         import re
 

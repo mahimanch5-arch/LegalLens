@@ -5,22 +5,20 @@ Loads and extracts text from PDF, DOCX, and TXT files.
 Handles both scanned and unscanned PDFs with automatic detection.
 """
 
-from typing import Optional, Tuple, List
+import logging
 from dataclasses import dataclass
 from pathlib import Path
-import mimetypes
-import logging
+from typing import Any
 
 try:
-    from PyPDF2 import PdfReader
-    import pypdf
-except ImportError:
-    raise ImportError("Please install PyPDF2: pip install PyPDF2")
+    from pypdf import PdfReader
+except ImportError as e:
+    raise ImportError("Please install pypdf: pip install pypdf") from e
 
 try:
     from docx import Document as DocxDocument
-except ImportError:
-    raise ImportError("Please install python-docx: pip install python-docx")
+except ImportError as e:
+    raise ImportError("Please install python-docx: pip install python-docx") from e
 
 logger = logging.getLogger(__name__)
 
@@ -34,10 +32,10 @@ class LoadedDocument:
     is_scanned: bool
     page_count: int
     character_count: int
-    pages: List[str]  # Text per page
-    metadata: dict = None
+    pages: list[str]  # Text per page
+    metadata: dict[str, Any] | None = None
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         if self.metadata is None:
             self.metadata = {}
 
@@ -56,7 +54,7 @@ class DocumentLoader:
     SCANNED_DETECTION_THRESHOLD = 50  # Characters - if less, likely scanned
 
     @staticmethod
-    def load(file_path: str) -> LoadedDocument:
+    def load(file_path: str | Path) -> LoadedDocument:
         """
         Load a document and return its content.
 
@@ -73,7 +71,7 @@ class DocumentLoader:
         file_path = Path(file_path)
 
         if not file_path.exists():
-            raise IOError(f"File not found: {file_path}")
+            raise OSError(f"File not found: {file_path}")
 
         suffix = file_path.suffix.lower()
 
@@ -92,7 +90,7 @@ class DocumentLoader:
         try:
             reader = PdfReader(str(file_path))
         except Exception as e:
-            raise IOError(f"Failed to read PDF: {e}")
+            raise OSError(f"Failed to read PDF: {e}") from e
 
         page_count = len(reader.pages)
         pages = []
@@ -137,7 +135,7 @@ class DocumentLoader:
         try:
             doc = DocxDocument(str(file_path))
         except Exception as e:
-            raise IOError(f"Failed to read DOCX: {e}")
+            raise OSError(f"Failed to read DOCX: {e}") from e
 
         # Extract all paragraphs
         paragraphs = []
@@ -172,17 +170,17 @@ class DocumentLoader:
     def _load_txt(file_path: Path) -> LoadedDocument:
         """Load TXT file"""
         try:
-            with open(file_path, 'r', encoding='utf-8') as f:
+            with open(file_path, encoding='utf-8') as f:
                 text = f.read()
         except UnicodeDecodeError:
             # Try with latin-1 encoding
             try:
-                with open(file_path, 'r', encoding='latin-1') as f:
+                with open(file_path, encoding='latin-1') as f:
                     text = f.read()
             except Exception as e:
-                raise IOError(f"Failed to read TXT file: {e}")
+                raise OSError(f"Failed to read TXT file: {e}") from e
         except Exception as e:
-            raise IOError(f"Failed to read TXT file: {e}")
+            raise OSError(f"Failed to read TXT file: {e}") from e
 
         # Estimate pages
         word_count = len(text.split())

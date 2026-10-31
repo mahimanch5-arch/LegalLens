@@ -10,19 +10,19 @@ Complete end-to-end workflow:
 """
 
 import logging
-from typing import List, Optional, Dict, Tuple
 from dataclasses import dataclass
-from enum import Enum
+from enum import StrEnum
+from typing import Any
 
+from hybrid_retrieval import HybridRetriever
 from langchain_anthropic import ChatAnthropic
 from question_rewriter import QuestionRewriter
-from hybrid_retrieval import HybridRetriever
-from reranker import RerankerPipeline, RankedResult
+from reranker import RankedResult, RerankerPipeline
 
 logger = logging.getLogger(__name__)
 
 
-class DocumentType(str, Enum):
+class DocumentType(StrEnum):
     """Legal document types"""
     CONTRACT = "contract"
     OPINION = "opinion"
@@ -36,9 +36,9 @@ class SummaryResult:
     document_type: DocumentType
     document_id: str
     original_query: str
-    retrieved_chunks: List[RankedResult]
-    structured_summary: Dict
-    metadata: Dict = None
+    retrieved_chunks: list[RankedResult]
+    structured_summary: dict[str, Any]
+    metadata: dict[str, Any] | None = None
 
 
 class SummaryWorkflow:
@@ -66,8 +66,8 @@ class SummaryWorkflow:
 
     def execute(self,
                document_id: str,
-               query: Optional[str] = None,
-               chat_history: Optional[List[Tuple[str, str]]] = None) -> SummaryResult:
+               query: str | None = None,
+               chat_history: list[tuple[str, str]] | None = None) -> SummaryResult:
         """
         Execute complete Summary workflow.
 
@@ -133,12 +133,12 @@ class SummaryWorkflow:
 
     def _clarify_query(self,
                       query: str,
-                      chat_history: Optional[List[Tuple[str, str]]]) -> str:
+                      chat_history: list[tuple[str, str]] | None) -> str:
         """Clarify summarization query using Haiku"""
         result = self.question_rewriter.rewrite(query, chat_history)
-        return result.rewritten_question
+        return str(result.rewritten_question)
 
-    def _detect_complexity(self, chunks: List[RankedResult]) -> Tuple[DocumentType, str]:
+    def _detect_complexity(self, chunks: list[RankedResult]) -> tuple[DocumentType, str]:
         """
         Detect document type and complexity.
 
@@ -153,7 +153,7 @@ class SummaryWorkflow:
         opinion_keywords = ["court", "holding", "reasoned", "precedent", "affirm"]
         pleading_keywords = ["complaint", "defendant", "plaintiff", "cause of action"]
 
-        def count_keywords(text, keywords):
+        def count_keywords(text: str, keywords: list[str]) -> int:
             return sum(text.lower().count(kw) for kw in keywords)
 
         contract_score = count_keywords(full_text, contract_keywords)
@@ -181,15 +181,12 @@ class SummaryWorkflow:
 
     def _generate_summary(self,
                          doc_type: DocumentType,
-                         chunks: List[RankedResult],
-                         complexity: str) -> Dict:
+                         chunks: list[RankedResult],
+                         complexity: str) -> dict[str, Any]:
         """Generate structured summary based on document type"""
 
         # Select model based on complexity
-        if complexity == "complex":
-            model = "claude-opus-5-5"  # More capable for complex docs
-        else:
-            model = "claude-sonnet-5-5"  # Faster for simple docs
+        model = "claude-opus-5-5" if complexity == "complex" else "claude-sonnet-5-5"
 
         self.llm = ChatAnthropic(model=model, temperature=0.2)
 
@@ -209,7 +206,7 @@ class SummaryWorkflow:
         }
 
     @staticmethod
-    def _get_summary_template(doc_type: DocumentType) -> Dict:
+    def _get_summary_template(doc_type: DocumentType) -> dict[str, Any]:
         """Get summary template for document type"""
 
         templates = {
@@ -249,7 +246,7 @@ class SummaryWorkflow:
 
 def summarize(retriever: HybridRetriever,
              document_id: str,
-             query: Optional[str] = None) -> SummaryResult:
+             query: str | None = None) -> SummaryResult:
     """
     Simple function to summarize a document.
 

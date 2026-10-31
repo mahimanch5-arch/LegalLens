@@ -5,9 +5,8 @@ Uses Tesseract OCR to extract text from scanned PDFs and images.
 Handles per-page OCR with confidence scoring.
 """
 
-from typing import List, Tuple, Optional
-from dataclasses import dataclass
 import logging
+from dataclasses import dataclass
 
 logger = logging.getLogger(__name__)
 
@@ -18,7 +17,7 @@ class OCRResult:
     page_num: int
     text: str
     confidence: float  # 0.0-1.0, average confidence
-    raw_confidence_scores: List[float] = None  # Per-word confidence
+    raw_confidence_scores: list[float] | None = None  # Per-word confidence
 
 
 class OCRProcessor:
@@ -33,7 +32,7 @@ class OCRProcessor:
 
     CONFIDENCE_THRESHOLD = 0.80
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize OCR processor"""
         try:
             import pytesseract
@@ -45,7 +44,7 @@ class OCRProcessor:
             self.available = False
             logger.warning("Tesseract not installed. Install with: pip install pytesseract pdf2image")
 
-    def process_scanned_pdf(self, pdf_path: str, pages: Optional[List[int]] = None) -> List[OCRResult]:
+    def process_scanned_pdf(self, pdf_path: str, pages: list[int] | None = None) -> list[OCRResult]:
         """
         Extract text from scanned PDF using OCR.
 
@@ -92,7 +91,7 @@ class OCRProcessor:
                         page_num=page_num,
                         text=text,
                         confidence=avg_confidence / 100.0,  # Convert to 0-1 scale
-                        raw_confidence_scores=confidences
+                        raw_confidence_scores=[float(c) for c in confidences]
                     ))
 
                 except Exception as e:
@@ -142,7 +141,7 @@ class OCRProcessor:
                 page_num=0,
                 text=text,
                 confidence=avg_confidence / 100.0,
-                raw_confidence_scores=confidences
+                raw_confidence_scores=[float(c) for c in confidences]
             )
 
         except Exception as e:
@@ -150,14 +149,14 @@ class OCRProcessor:
             return OCRResult(page_num=0, text="", confidence=0.0)
 
     @staticmethod
-    def calculate_average_confidence(results: List[OCRResult]) -> float:
+    def calculate_average_confidence(results: list[OCRResult]) -> float:
         """Calculate average confidence across all OCR results"""
         if not results:
             return 0.0
         return sum(r.confidence for r in results) / len(results)
 
     @staticmethod
-    def get_low_confidence_pages(results: List[OCRResult], threshold: float = 0.80) -> List[int]:
+    def get_low_confidence_pages(results: list[OCRResult], threshold: float = 0.80) -> list[int]:
         """Get page numbers with confidence below threshold"""
         return [r.page_num for r in results if r.confidence < threshold]
 
@@ -166,11 +165,11 @@ class OCRProcessor:
 class MockOCRProcessor:
     """Mock OCR processor for testing without Tesseract"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.available = False
         logger.info("Using MockOCRProcessor (no actual OCR). Install pytesseract + tesseract for real OCR.")
 
-    def process_scanned_pdf(self, pdf_path: str, pages: Optional[List[int]] = None) -> List[OCRResult]:
+    def process_scanned_pdf(self, pdf_path: str, pages: list[int] | None = None) -> list[OCRResult]:
         """Mock implementation"""
         logger.warning(f"MockOCRProcessor: Skipping OCR for {pdf_path}")
         return []
@@ -182,7 +181,7 @@ class MockOCRProcessor:
 
 
 # Use mock by default, can switch to real when Tesseract is available
-def get_ocr_processor():
+def get_ocr_processor() -> OCRProcessor | MockOCRProcessor:
     """Get OCR processor (real or mock)"""
     try:
         processor = OCRProcessor()

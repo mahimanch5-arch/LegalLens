@@ -10,13 +10,13 @@ Complete end-to-end workflow:
 """
 
 import logging
-from typing import List, Optional, Dict, Tuple
 from dataclasses import dataclass
-from langchain_anthropic import ChatAnthropic
+from typing import Any
 
-from question_rewriter import QuestionRewriter, RewriteResult
-from hybrid_retrieval import HybridRetriever, RetrievalResult
-from reranker import RerankerPipeline, RankedResult
+from hybrid_retrieval import HybridRetriever
+from langchain_anthropic import ChatAnthropic
+from question_rewriter import QuestionRewriter
+from reranker import RankedResult, RerankerPipeline
 
 logger = logging.getLogger(__name__)
 
@@ -26,10 +26,10 @@ class AskResult:
     """Result of Ask workflow"""
     original_question: str
     rewritten_question: str
-    retrieved_chunks: List[RankedResult]
+    retrieved_chunks: list[RankedResult]
     generated_answer: str
-    citations: List[Dict]  # {text, chunk_id, source}
-    metadata: Dict = None
+    citations: list[dict[str, Any]]  # {text, chunk_id, source}
+    metadata: dict[str, Any] | None = None
 
 
 ASK_GENERATION_SYSTEM_PROMPT = """You are an expert legal analyst assistant helping attorneys research documents.
@@ -78,8 +78,8 @@ class AskWorkflow:
 
     def execute(self,
                question: str,
-               chat_history: Optional[List[Tuple[str, str]]] = None,
-               document_filter: Optional[str] = None) -> AskResult:
+               chat_history: list[tuple[str, str]] | None = None,
+               document_filter: str | None = None) -> AskResult:
         """
         Execute complete Ask workflow.
 
@@ -150,7 +150,7 @@ class AskWorkflow:
             raise
 
     @staticmethod
-    def _build_rag_context(ranked_chunks: List[RankedResult]) -> str:
+    def _build_rag_context(ranked_chunks: list[RankedResult]) -> str:
         """Build RAG context from ranked chunks"""
         context = []
         for i, chunk in enumerate(ranked_chunks, 1):
@@ -164,7 +164,7 @@ class AskWorkflow:
                         question: str,
                         rewritten_question: str,
                         rag_context: str,
-                        ranked_chunks: List[RankedResult]) -> Tuple[str, List[Dict]]:
+                        ranked_chunks: list[RankedResult]) -> tuple[str, list[dict[str, Any]]]:
         """Generate answer using Claude Sonnet with RAG context"""
 
         # Build system prompt
@@ -196,7 +196,7 @@ Question: {question}"""
             raise
 
     @staticmethod
-    def _extract_citations(answer: str, chunks: List[RankedResult]) -> List[Dict]:
+    def _extract_citations(answer: str, chunks: list[RankedResult]) -> list[dict[str, Any]]:
         """Extract citations from generated answer"""
         import re
 
@@ -227,8 +227,8 @@ Question: {question}"""
 # Convenience function
 def ask(retriever: HybridRetriever,
         question: str,
-        chat_history: Optional[List[Tuple[str, str]]] = None,
-        document_filter: Optional[str] = None) -> AskResult:
+        chat_history: list[tuple[str, str]] | None = None,
+        document_filter: str | None = None) -> AskResult:
     """
     Simple function to run Ask workflow.
 

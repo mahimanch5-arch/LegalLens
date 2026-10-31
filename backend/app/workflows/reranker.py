@@ -6,8 +6,8 @@ Reduces candidates from ~50 to top 5-10 based on relevance.
 """
 
 import logging
-from typing import List, Optional
 from dataclasses import dataclass
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -20,7 +20,7 @@ class RankedResult:
     text: str
     score: float  # BGE Reranker score (0-1)
     rank: int     # Position in ranked list (1-indexed)
-    metadata: dict = None
+    metadata: dict[str, Any] | None = None
 
 
 class BGEReranker:
@@ -47,29 +47,29 @@ class BGEReranker:
         self.model = None
         self._load_model()
 
-    def _load_model(self):
+    def _load_model(self) -> None:
         """Load the BGE Reranker model"""
         try:
             from sentence_transformers import CrossEncoder
             logger.info(f"Loading reranker: {self.model_name}")
             self.model = CrossEncoder(self.model_name)
             logger.info("Reranker loaded successfully")
-        except ImportError:
+        except ImportError as e:
             raise ImportError(
                 "sentence-transformers not installed. "
                 "Install with: pip install sentence-transformers"
-            )
+            ) from e
         except Exception as e:
             logger.error(f"Failed to load reranker: {e}")
             raise
 
     def rerank(self,
                query: str,
-               documents: List[str],
-               chunk_ids: Optional[List[str]] = None,
-               document_ids: Optional[List[str]] = None,
-               metadatas: Optional[List[dict]] = None,
-               top_k: int = 10) -> List[RankedResult]:
+               documents: list[str],
+               chunk_ids: list[str] | None = None,
+               document_ids: list[str] | None = None,
+               metadatas: list[dict[str, Any]] | None = None,
+               top_k: int = 10) -> list[RankedResult]:
         """
         Re-rank documents by relevance to query.
 
@@ -117,7 +117,7 @@ class BGEReranker:
             # Create ranked results
             ranked = []
             for i, (chunk_id, doc_id, text, score, metadata) in enumerate(
-                zip(chunk_ids, document_ids, documents, scores, metadatas)
+                zip(chunk_ids, document_ids, documents, scores, metadatas, strict=True)
             ):
                 ranked.append(RankedResult(
                     chunk_id=chunk_id,
@@ -146,7 +146,7 @@ class BGEReranker:
             return []
 
     @staticmethod
-    def _normalize_scores(scores) -> List[float]:
+    def _normalize_scores(scores: Any) -> list[float]:
         """Normalize scores to 0-1 range"""
         import numpy as np
 
@@ -161,7 +161,7 @@ class BGEReranker:
             return [0.5] * len(scores)
 
         normalized = (scores - min_score) / (max_score - min_score)
-        return normalized.tolist()
+        return [float(x) for x in normalized.tolist()]
 
 
 class RerankerPipeline:
@@ -179,8 +179,8 @@ class RerankerPipeline:
 
     def rerank_results(self,
                       query: str,
-                      retrieved_results,  # List with .chunk_id, .document_id, .text, .metadata
-                      top_k: Optional[int] = None) -> List[RankedResult]:
+                      retrieved_results: list[Any],  # List with .chunk_id, .document_id, .text, .metadata
+                      top_k: int | None = None) -> list[RankedResult]:
         """
         Re-rank retrieval results.
 
@@ -220,8 +220,8 @@ class RerankerPipeline:
 
 # Convenience function
 def rerank_results(query: str,
-                  retrieved_results,
-                  top_k: int = 10) -> List[RankedResult]:
+                  retrieved_results: list[Any],
+                  top_k: int = 10) -> list[RankedResult]:
     """
     Simple function to re-rank retrieval results.
 

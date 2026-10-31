@@ -8,10 +8,10 @@ Usage:
     python test_classifier_cli.py "your message here"  # Single classification
 """
 
-import sys
-import os
 import argparse
+import sys
 from pathlib import Path
+
 from dotenv import load_dotenv
 
 # Load .env from the same directory as this script
@@ -19,8 +19,8 @@ env_path = Path(__file__).parent / ".env"
 if env_path.exists():
     load_dotenv(env_path)
 
-from intent_classifier import IntentClassifier, Intent
-from typing import Optional
+
+from intent_classifier import Intent, IntentClassifier  # noqa: E402  (.env must load first)
 
 
 def print_result(message: str, result):

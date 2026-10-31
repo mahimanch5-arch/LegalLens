@@ -2,9 +2,11 @@
 Unit tests for Ask Workflow module
 """
 
+import contextlib
+from unittest.mock import Mock, patch
+
 import pytest
-from unittest.mock import Mock, patch, MagicMock, call
-from ask_workflow import AskWorkflow, AskResult
+from ask_workflow import AskResult, AskWorkflow
 
 
 class TestAskResult:
@@ -78,28 +80,26 @@ class TestAskWorkflowInit:
 
     def test_workflow_initialization(self, mock_retriever):
         """Test AskWorkflow initialization"""
-        with patch('ask_workflow.QuestionRewriter'):
-            with patch('ask_workflow.RerankerPipeline'):
-                with patch('ask_workflow.ChatAnthropic'):
-                    workflow = AskWorkflow(mock_retriever, reranker_top_k=10)
+        with patch('ask_workflow.QuestionRewriter'), patch('ask_workflow.RerankerPipeline'), \
+                patch('ask_workflow.ChatAnthropic'):
+            workflow = AskWorkflow(mock_retriever, reranker_top_k=10)
 
-                    assert workflow.retriever == mock_retriever
-                    assert workflow.reranker_top_k == 10
+            assert workflow.retriever == mock_retriever
+            assert workflow.reranker_top_k == 10
 
     def test_workflow_with_custom_model(self, mock_retriever):
         """Test AskWorkflow with custom LLM model"""
-        with patch('ask_workflow.QuestionRewriter'):
-            with patch('ask_workflow.RerankerPipeline'):
-                with patch('ask_workflow.ChatAnthropic') as mock_anthropic:
-                    workflow = AskWorkflow(
-                        mock_retriever,
-                        llm_model="claude-opus-5-5"
-                    )
+        with patch('ask_workflow.QuestionRewriter'), patch('ask_workflow.RerankerPipeline'), \
+                patch('ask_workflow.ChatAnthropic') as mock_anthropic:
+            AskWorkflow(
+                mock_retriever,
+                llm_model="claude-opus-5-5"
+            )
 
-                    # Verify ChatAnthropic was called with correct model
-                    calls = [c for c in mock_anthropic.call_args_list
-                            if 'model' in c.kwargs or (len(c[0]) > 0 and 'claude' in str(c))]
-                    assert len(calls) > 0
+            # Verify ChatAnthropic was called with correct model
+            calls = [c for c in mock_anthropic.call_args_list
+                    if 'model' in c.kwargs or (len(c[0]) > 0 and 'claude' in str(c))]
+            assert len(calls) > 0
 
 
 class TestAskWorkflowExecution:
@@ -153,66 +153,65 @@ class TestAskWorkflowExecution:
 
     def test_execute_five_step_pipeline(self, mock_components):
         """Test complete five-step Ask workflow pipeline"""
-        with patch('ask_workflow.QuestionRewriter') as mock_qr_class:
-            with patch('ask_workflow.RerankerPipeline') as mock_rr_class:
-                with patch('ask_workflow.ChatAnthropic') as mock_llm_class:
-                    # Setup mocks
-                    mock_qr = Mock()
-                    mock_qr.rewrite.return_value = mock_components["rewrite_result"]
-                    mock_qr_class.return_value = mock_qr
+        with patch('ask_workflow.QuestionRewriter') as mock_qr_class, \
+                patch('ask_workflow.RerankerPipeline') as mock_rr_class, \
+                patch('ask_workflow.ChatAnthropic') as mock_llm_class:
+            # Setup mocks
+            mock_qr = Mock()
+            mock_qr.rewrite.return_value = mock_components["rewrite_result"]
+            mock_qr_class.return_value = mock_qr
 
-                    mock_rr = Mock()
-                    mock_rr.rerank_results.return_value = mock_components["ranked_results"]
-                    mock_rr_class.return_value = mock_rr
+            mock_rr = Mock()
+            mock_rr.rerank_results.return_value = mock_components["ranked_results"]
+            mock_rr_class.return_value = mock_rr
 
-                    mock_llm = Mock()
-                    mock_llm.invoke.return_value = mock_components["llm_response"]
-                    mock_llm_class.return_value = mock_llm
+            mock_llm = Mock()
+            mock_llm.invoke.return_value = mock_components["llm_response"]
+            mock_llm_class.return_value = mock_llm
 
-                    # Execute workflow
-                    workflow = AskWorkflow(mock_components["retriever"])
-                    result = workflow.execute("What is the question?")
+            # Execute workflow
+            workflow = AskWorkflow(mock_components["retriever"])
+            result = workflow.execute("What is the question?")
 
-                    # Verify all steps were executed
-                    assert result.original_question == "What is the question?"
-                    assert result.rewritten_question == "Rewritten question"
-                    assert len(result.retrieved_chunks) > 0
-                    assert result.generated_answer is not None
+            # Verify all steps were executed
+            assert result.original_question == "What is the question?"
+            assert result.rewritten_question == "Rewritten question"
+            assert len(result.retrieved_chunks) > 0
+            assert result.generated_answer is not None
 
     def test_execute_with_chat_history(self, mock_components):
         """Test execute with chat history"""
-        with patch('ask_workflow.QuestionRewriter') as mock_qr_class:
-            with patch('ask_workflow.RerankerPipeline'):
-                with patch('ask_workflow.ChatAnthropic'):
-                    mock_qr = Mock()
-                    mock_qr.rewrite.return_value = mock_components["rewrite_result"]
-                    mock_qr_class.return_value = mock_qr
+        with patch('ask_workflow.QuestionRewriter') as mock_qr_class, \
+                patch('ask_workflow.RerankerPipeline'), \
+                patch('ask_workflow.ChatAnthropic'):
+            mock_qr = Mock()
+            mock_qr.rewrite.return_value = mock_components["rewrite_result"]
+            mock_qr_class.return_value = mock_qr
 
-                    chat_history = [
-                        ("Previous question", "Previous answer")
-                    ]
+            chat_history = [
+                ("Previous question", "Previous answer")
+            ]
 
-                    workflow = AskWorkflow(mock_components["retriever"])
-                    workflow.question_rewriter = mock_qr
+            workflow = AskWorkflow(mock_components["retriever"])
+            workflow.question_rewriter = mock_qr
 
-                    # Execute with history
-                    workflow.execute("Follow-up question", chat_history=chat_history)
+            # Execute with history
+            workflow.execute("Follow-up question", chat_history=chat_history)
 
-                    # Verify rewriter was called with history
-                    mock_qr.rewrite.assert_called_with("Follow-up question", chat_history)
+            # Verify rewriter was called with history
+            mock_qr.rewrite.assert_called_with("Follow-up question", chat_history)
 
     def test_execute_with_document_filter(self, mock_components):
         """Test execute with document filter"""
-        with patch('ask_workflow.QuestionRewriter'):
-            with patch('ask_workflow.RerankerPipeline'):
-                with patch('ask_workflow.ChatAnthropic'):
-                    workflow = AskWorkflow(mock_components["retriever"])
-                    workflow.execute("Question", document_filter="specific_doc")
+        with patch('ask_workflow.QuestionRewriter'), patch('ask_workflow.RerankerPipeline'), \
+                patch('ask_workflow.ChatAnthropic'):
+            workflow = AskWorkflow(mock_components["retriever"])
+            workflow.execute("Question", document_filter="specific_doc")
 
-                    # Verify retriever was called with filter
-                    assert mock_components["retriever"].hybrid_search.called
-                    call_kwargs = mock_components["retriever"].hybrid_search.call_args.kwargs
-                    assert call_kwargs["document_filter"] == "specific_doc"
+            # Verify retriever was called with filter
+            assert mock_components["retriever"].hybrid_search.called
+            call_kwargs = mock_components["retriever"].hybrid_search.call_args.kwargs
+            assert call_kwargs["document_filter"] == "specific_doc"
 
 
 class TestRAGContextBuilding:
@@ -375,7 +374,7 @@ class TestErrorHandling:
             workflow.question_rewriter = mock_qr
 
             # Should propagate error
-            with pytest.raises(Exception):
+            with pytest.raises(Exception, match="Rewrite failed"):
                 workflow.execute("Question")
 
     def test_execute_handles_retrieval_error(self):
@@ -383,32 +382,30 @@ class TestErrorHandling:
         mock_retriever = Mock()
         mock_retriever.hybrid_search.side_effect = Exception("Retrieval failed")
 
-        with patch('ask_workflow.QuestionRewriter'):
-            with patch('ask_workflow.RerankerPipeline'):
-                with patch('ask_workflow.ChatAnthropic'):
-                    workflow = AskWorkflow(mock_retriever)
+        with patch('ask_workflow.QuestionRewriter'), patch('ask_workflow.RerankerPipeline'), \
+                patch('ask_workflow.ChatAnthropic'):
+            workflow = AskWorkflow(mock_retriever)
 
-                    # Should propagate error
-                    with pytest.raises(Exception):
-                        workflow.execute("Question")
+            # Should propagate error
+            with pytest.raises(Exception, match="Retrieval failed"):
+                workflow.execute("Question")
 
     def test_execute_handles_generation_error(self):
         """Test handling of LLM generation errors"""
         mock_retriever = Mock()
         mock_retriever.hybrid_search.return_value = [Mock(chunk_id="c1", document_id="d1", text="t", metadata={})]
 
-        with patch('ask_workflow.QuestionRewriter'):
-            with patch('ask_workflow.RerankerPipeline'):
-                with patch('ask_workflow.ChatAnthropic') as mock_llm_class:
-                    mock_llm = Mock()
-                    mock_llm.invoke.side_effect = Exception("Generation failed")
-                    mock_llm_class.return_value = mock_llm
+        with patch('ask_workflow.QuestionRewriter'), patch('ask_workflow.RerankerPipeline'), \
+                patch('ask_workflow.ChatAnthropic') as mock_llm_class:
+            mock_llm = Mock()
+            mock_llm.invoke.side_effect = Exception("Generation failed")
+            mock_llm_class.return_value = mock_llm
 
-                    workflow = AskWorkflow(mock_retriever)
+            workflow = AskWorkflow(mock_retriever)
 
-                    # Should propagate error
-                    with pytest.raises(Exception):
-                        workflow.execute("Question")
+            # Should propagate error
+            with pytest.raises(Exception, match="Generation failed"):
+                workflow.execute("Question")
 
 
 class TestConvenienceFunction:
@@ -425,7 +422,7 @@ class TestConvenienceFunction:
             mock_workflow_class.return_value = mock_workflow
 
             from ask_workflow import ask
-            result = ask(mock_retriever, "Question")
+            ask(mock_retriever, "Question")
 
             # Verify workflow was created and executed
             assert mock_workflow_class.called
@@ -438,21 +435,14 @@ class TestPerformance:
     def test_execution_timing_structure(self):
         """Test that execution follows expected timing structure"""
         # Verify that each step logs timing information
-        with patch('ask_workflow.logger') as mock_logger:
-            mock_retriever = Mock()
-            mock_retriever.hybrid_search.return_value = []
+        mock_retriever = Mock()
+        mock_retriever.hybrid_search.return_value = []
 
-            with patch('ask_workflow.QuestionRewriter'):
-                with patch('ask_workflow.RerankerPipeline'):
-                    with patch('ask_workflow.ChatAnthropic'):
-                        workflow = AskWorkflow(mock_retriever)
-                        try:
-                            workflow.execute("Q")
-                        except:
-                            pass
-
-                        # Should have logged multiple steps
-                        assert mock_logger.info.called or True  # Depends on logging config
+        with patch('ask_workflow.QuestionRewriter'), patch('ask_workflow.RerankerPipeline'), \
+                patch('ask_workflow.ChatAnthropic'):
+            workflow = AskWorkflow(mock_retriever)
+            with contextlib.suppress(BaseException):
+                workflow.execute("Q")
 
 
 class TestIntegration:
@@ -471,34 +461,32 @@ class TestIntegration:
         mock_retriever = Mock()
         mock_retriever.hybrid_search = track_execution("retrieve")
 
-        with patch('ask_workflow.QuestionRewriter') as mock_qr_class:
-            with patch('ask_workflow.RerankerPipeline') as mock_rr_class:
-                with patch('ask_workflow.ChatAnthropic') as mock_llm_class:
-                    mock_qr = Mock()
-                    mock_qr.rewrite.side_effect = track_execution("rewrite")
-                    mock_qr.rewrite.return_value = Mock(rewritten_question="Q")
-                    mock_qr_class.return_value = mock_qr
+        with patch('ask_workflow.QuestionRewriter') as mock_qr_class, \
+                patch('ask_workflow.RerankerPipeline') as mock_rr_class, \
+                patch('ask_workflow.ChatAnthropic') as mock_llm_class:
+            mock_qr = Mock()
+            mock_qr.rewrite.side_effect = track_execution("rewrite")
+            mock_qr.rewrite.return_value = Mock(rewritten_question="Q")
+            mock_qr_class.return_value = mock_qr
 
-                    mock_rr = Mock()
-                    mock_rr.rerank_results = track_execution("rerank")
-                    mock_rr.rerank_results.return_value = []
-                    mock_rr_class.return_value = mock_rr
+            mock_rr = Mock()
+            mock_rr.rerank_results = track_execution("rerank")
+            mock_rr.rerank_results.return_value = []
+            mock_rr_class.return_value = mock_rr
 
-                    mock_llm = Mock()
-                    mock_llm_class.return_value = mock_llm
+            mock_llm = Mock()
+            mock_llm_class.return_value = mock_llm
 
-                    workflow = AskWorkflow(mock_retriever)
+            workflow = AskWorkflow(mock_retriever)
 
-                    try:
-                        workflow.execute("Q")
-                    except:
-                        pass
+            with contextlib.suppress(BaseException):
+                workflow.execute("Q")
 
-                    # Pipeline should execute steps in order: rewrite, retrieve, rerank
-                    if execution_order:
-                        assert execution_order[0] == "rewrite"
-                        assert "retrieve" in execution_order
-                        assert "rerank" in execution_order
+            # Pipeline should execute steps in order: rewrite, retrieve, rerank
+            if execution_order:
+                assert execution_order[0] == "rewrite"
+                assert "retrieve" in execution_order
+                assert "rerank" in execution_order
 
 
 if __name__ == "__main__":

@@ -4,8 +4,8 @@ Unit tests for IntentClassifier
 Tests both heuristic and LLM-based classification paths.
 """
 
-import os
 from pathlib import Path
+
 from dotenv import load_dotenv
 
 # Load .env from the same directory as intent_classifier.py
@@ -13,8 +13,12 @@ env_path = Path(__file__).parent / ".env"
 if env_path.exists():
     load_dotenv(env_path)
 
-import pytest
-from intent_classifier import IntentClassifier, Intent, ClassificationResult
+import pytest  # noqa: E402  (.env must load first)
+from intent_classifier import (  # noqa: E402
+    ClassificationResult,
+    Intent,
+    IntentClassifier,
+)
 
 
 @pytest.fixture

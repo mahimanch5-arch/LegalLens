@@ -6,9 +6,9 @@ Returns merged results ready for re-ranking.
 """
 
 import logging
-from typing import List, Dict, Tuple, Optional
-from dataclasses import dataclass
 from abc import ABC, abstractmethod
+from dataclasses import dataclass
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -21,26 +21,26 @@ class RetrievalResult:
     text: str
     score: float  # Relevance score (0-1)
     source: str  # "vector" or "keyword"
-    metadata: Dict = None
+    metadata: dict[str, Any] | None = None
 
 
 class HybridRetriever(ABC):
     """Abstract base class for hybrid retrieval"""
 
     @abstractmethod
-    def vector_search(self, query: str, top_k: int = 25) -> List[RetrievalResult]:
+    def vector_search(self, query: str, top_k: int = 25) -> list[RetrievalResult]:
         """Search using vector embeddings"""
         pass
 
     @abstractmethod
-    def keyword_search(self, query: str, top_k: int = 25) -> List[RetrievalResult]:
+    def keyword_search(self, query: str, top_k: int = 25) -> list[RetrievalResult]:
         """Search using BM25 keyword matching"""
         pass
 
     def hybrid_search(self,
                      query: str,
                      top_k: int = 25,
-                     document_filter: Optional[str] = None) -> List[RetrievalResult]:
+                     document_filter: str | None = None) -> list[RetrievalResult]:
         """
         Perform hybrid search combining vector and keyword results.
 
@@ -70,8 +70,8 @@ class HybridRetriever(ABC):
         return merged
 
     @staticmethod
-    def _merge_results(vector_results: List[RetrievalResult],
-                      keyword_results: List[RetrievalResult]) -> List[RetrievalResult]:
+    def _merge_results(vector_results: list[RetrievalResult],
+                      keyword_results: list[RetrievalResult]) -> list[RetrievalResult]:
         """
         Merge vector and keyword results.
 
@@ -113,8 +113,8 @@ class ChromaVectorHybridRetriever(HybridRetriever):
     """Hybrid retriever using Chroma for vectors and BM25 for keywords"""
 
     def __init__(self,
-                 vector_store,  # Chroma vector store
-                 bm25_index):   # BM25 index
+                 vector_store: Any,  # Chroma vector store
+                 bm25_index: Any) -> None:   # BM25 index
         """
         Initialize hybrid retriever.
 
@@ -125,7 +125,7 @@ class ChromaVectorHybridRetriever(HybridRetriever):
         self.vector_store = vector_store
         self.bm25_index = bm25_index
 
-    def vector_search(self, query: str, top_k: int = 25) -> List[RetrievalResult]:
+    def vector_search(self, query: str, top_k: int = 25) -> list[RetrievalResult]:
         """Search using Chroma vector embeddings"""
         try:
             from embedding_service import get_embedding_service
@@ -161,7 +161,7 @@ class ChromaVectorHybridRetriever(HybridRetriever):
             logger.error(f"Vector search failed: {e}")
             return []
 
-    def keyword_search(self, query: str, top_k: int = 25) -> List[RetrievalResult]:
+    def keyword_search(self, query: str, top_k: int = 25) -> list[RetrievalResult]:
         """Search using BM25 keyword matching"""
         try:
             # This would use BM25 index or similar
@@ -192,7 +192,7 @@ class HybridRetrievalPipeline:
     def retrieve(self,
                 query: str,
                 top_k: int = 25,
-                document_filter: Optional[str] = None) -> List[RetrievalResult]:
+                document_filter: str | None = None) -> list[RetrievalResult]:
         """
         Retrieve relevant chunks using hybrid search.
 
@@ -220,7 +220,7 @@ class HybridRetrievalPipeline:
 def hybrid_search(retriever: HybridRetriever,
                  query: str,
                  top_k: int = 25,
-                 document_filter: Optional[str] = None) -> List[RetrievalResult]:
+                 document_filter: str | None = None) -> list[RetrievalResult]:
     """
     Simple function to perform hybrid search.
 

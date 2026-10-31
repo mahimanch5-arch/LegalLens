@@ -11,9 +11,10 @@ Usage:
 """
 
 import argparse
-import sys
-import uvicorn
 import os
+import sys
+
+import uvicorn
 
 # Force UTF-8 encoding on Windows
 if sys.platform == "win32":

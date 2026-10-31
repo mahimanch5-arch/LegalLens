@@ -5,8 +5,9 @@ Generates embeddings for document chunks using Sentence-BERT.
 Supports batch processing for efficiency.
 """
 
-from typing import List, Optional, Union
 import logging
+from typing import Any
+
 import numpy as np
 
 logger = logging.getLogger(__name__)
@@ -40,23 +41,23 @@ class EmbeddingService:
         self.model = None
         self._load_model()
 
-    def _load_model(self):
+    def _load_model(self) -> None:
         """Load the embedding model"""
         try:
             from sentence_transformers import SentenceTransformer
             logger.info(f"Loading embedding model: {self.model_name}")
             self.model = SentenceTransformer(self.model_name)
             logger.info(f"Model loaded successfully. Embedding dimension: {self.EMBEDDING_DIM}")
-        except ImportError:
+        except ImportError as e:
             raise ImportError(
                 "sentence-transformers not installed. "
                 "Install with: pip install sentence-transformers"
-            )
+            ) from e
         except Exception as e:
             logger.error(f"Failed to load embedding model: {e}")
             raise
 
-    def embed_text(self, text: str) -> Optional[List[float]]:
+    def embed_text(self, text: str) -> list[float] | None:
         """
         Generate embedding for a single text.
 
@@ -77,7 +78,7 @@ class EmbeddingService:
             logger.error(f"Failed to embed text: {e}")
             return None
 
-    def embed_texts(self, texts: List[str], show_progress: bool = False) -> Optional[List[List[float]]]:
+    def embed_texts(self, texts: list[str], show_progress: bool = False) -> list[list[float]] | None:
         """
         Generate embeddings for multiple texts.
 
@@ -110,7 +111,7 @@ class EmbeddingService:
             logger.error(f"Failed to embed texts: {e}")
             return None
 
-    def embed_chunks(self, chunks: List, show_progress: bool = False) -> List[dict]:
+    def embed_chunks(self, chunks: list[Any], show_progress: bool = False) -> list[dict[str, Any]]:
         """
         Generate embeddings for document chunks.
 
@@ -136,7 +137,7 @@ class EmbeddingService:
 
         # Combine chunks with embeddings
         results = []
-        for chunk, embedding in zip(chunks, embeddings):
+        for chunk, embedding in zip(chunks, embeddings, strict=True):
             results.append({
                 'chunk_id': chunk.id,
                 'document_id': chunk.document_id,
@@ -152,7 +153,7 @@ class EmbeddingService:
         logger.info(f"Generated {len(results)} embeddings")
         return results
 
-    def similarity(self, embedding1: List[float], embedding2: List[float]) -> float:
+    def similarity(self, embedding1: list[float], embedding2: list[float]) -> float:
         """
         Calculate cosine similarity between two embeddings.
 
@@ -194,13 +195,13 @@ def get_embedding_service() -> EmbeddingService:
 
 
 # Convenience functions
-def embed_text(text: str) -> Optional[List[float]]:
+def embed_text(text: str) -> list[float] | None:
     """Embed a single text"""
     service = get_embedding_service()
     return service.embed_text(text)
 
 
-def embed_texts(texts: List[str]) -> Optional[List[List[float]]]:
+def embed_texts(texts: list[str]) -> list[list[float]] | None:
     """Embed multiple texts"""
     service = get_embedding_service()
     return service.embed_texts(texts)
@@ -242,6 +243,6 @@ if __name__ == "__main__":
         print(f"   Dimension: {len(embeddings[0])}")
 
     # Test similarity
-    if len(embeddings) >= 2:
+    if embeddings and len(embeddings) >= 2:
         sim = service.similarity(embeddings[0], embeddings[1])
         print(f"\n✅ Similarity between first two texts: {sim:.2%}")

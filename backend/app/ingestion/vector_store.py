@@ -5,9 +5,10 @@ Abstract interface for storing and retrieving embeddings.
 Supports Chroma (development) and Qdrant (production).
 """
 
-from abc import ABC, abstractmethod
-from typing import List, Dict, Optional, Tuple
+import contextlib
 import logging
+from abc import ABC, abstractmethod
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -16,12 +17,12 @@ class VectorStore(ABC):
     """Abstract base class for vector stores"""
 
     @abstractmethod
-    def add_embeddings(self, embeddings: List[dict]) -> bool:
+    def add_embeddings(self, embeddings: list[dict[str, Any]]) -> bool:
         """Add embeddings to the store"""
         pass
 
     @abstractmethod
-    def search(self, query_embedding: List[float], top_k: int = 5) -> List[Tuple[str, float, dict]]:
+    def search(self, query_embedding: list[float], top_k: int = 5) -> list[tuple[str, float, dict[str, Any]]]:
         """Search for similar embeddings"""
         pass
 
@@ -31,7 +32,7 @@ class VectorStore(ABC):
         pass
 
     @abstractmethod
-    def get_chunk(self, chunk_id: str) -> Optional[dict]:
+    def get_chunk(self, chunk_id: str) -> dict[str, Any] | None:
         """Get a specific chunk by ID"""
         pass
 
@@ -58,8 +59,8 @@ class ChromaVectorStore(VectorStore):
         try:
             import chromadb
             self.chromadb = chromadb
-        except ImportError:
-            raise ImportError("chromadb not installed. Install with: pip install chromadb")
+        except ImportError as e:
+            raise ImportError("chromadb not installed. Install with: pip install chromadb") from e
 
         try:
             self.client = chromadb.PersistentClient(path=db_path)
@@ -72,7 +73,7 @@ class ChromaVectorStore(VectorStore):
             logger.error(f"Failed to initialize Chroma: {e}")
             raise
 
-    def add_embeddings(self, embeddings: List[dict]) -> bool:
+    def add_embeddings(self, embeddings: list[dict[str, Any]]) -> bool:
         """
         Add embeddings to Chroma.
 
@@ -115,7 +116,7 @@ class ChromaVectorStore(VectorStore):
             logger.error(f"Failed to add embeddings to Chroma: {e}")
             return False
 
-    def search(self, query_embedding: List[float], top_k: int = 5) -> List[Tuple[str, float, dict]]:
+    def search(self, query_embedding: list[float], top_k: int = 5) -> list[tuple[str, float, dict[str, Any]]]:
         """
         Search for similar chunks.
 
@@ -168,7 +169,7 @@ class ChromaVectorStore(VectorStore):
             logger.error(f"Failed to delete document: {e}")
             return False
 
-    def get_chunk(self, chunk_id: str) -> Optional[dict]:
+    def get_chunk(self, chunk_id: str) -> dict[str, Any] | None:
         """Get a specific chunk"""
         try:
             results = self.collection.get(
@@ -219,36 +220,34 @@ class QdrantVectorStore(VectorStore):
             self.QdrantClient = QdrantClient
             self.Distance = Distance
             self.VectorParams = VectorParams
-        except ImportError:
-            raise ImportError("qdrant-client not installed. Install with: pip install qdrant-client")
+        except ImportError as e:
+            raise ImportError("qdrant-client not installed. Install with: pip install qdrant-client") from e
 
         try:
             self.client = QdrantClient(host=host, port=port)
             self.collection_name = collection_name
 
             # Create collection if not exists
-            try:
+            # Collection might already exist
+            with contextlib.suppress(Exception):
                 self.client.recreate_collection(
                     collection_name=collection_name,
                     vectors_config=self.VectorParams(size=384, distance=Distance.COSINE)
                 )
-            except Exception:
-                # Collection might already exist
-                pass
 
             logger.info(f"Initialized Qdrant vector store at {host}:{port}")
         except Exception as e:
             logger.error(f"Failed to initialize Qdrant: {e}")
             raise
 
-    def add_embeddings(self, embeddings: List[dict]) -> bool:
+    def add_embeddings(self, embeddings: list[dict[str, Any]]) -> bool:
         """Add embeddings to Qdrant"""
         # Implementation would be similar to Chroma
         # Detailed implementation left for production setup
         logger.warning("Qdrant implementation deferred to production phase")
         return False
 
-    def search(self, query_embedding: List[float], top_k: int = 5) -> List[Tuple[str, float, dict]]:
+    def search(self, query_embedding: list[float], top_k: int = 5) -> list[tuple[str, float, dict[str, Any]]]:
         """Search for similar chunks"""
         logger.warning("Qdrant implementation deferred to production phase")
         return []
@@ -258,13 +257,13 @@ class QdrantVectorStore(VectorStore):
         logger.warning("Qdrant implementation deferred to production phase")
         return False
 
-    def get_chunk(self, chunk_id: str) -> Optional[dict]:
+    def get_chunk(self, chunk_id: str) -> dict[str, Any] | None:
         """Get a specific chunk"""
         logger.warning("Qdrant implementation deferred to production phase")
         return None
 
 
-def get_vector_store(store_type: str = "chroma", **kwargs) -> VectorStore:
+def get_vector_store(store_type: str = "chroma", **kwargs: Any) -> VectorStore:
     """
     Factory function to get vector store instance.
 

@@ -6,8 +6,8 @@ Includes strict guardrails to avoid unnecessary rewrites.
 """
 
 import logging
-from typing import Optional, List, Tuple
 from dataclasses import dataclass
+
 from langchain_anthropic import ChatAnthropic
 
 logger = logging.getLogger(__name__)
@@ -104,7 +104,7 @@ class QuestionRewriter:
 
     def rewrite(self,
                 question: str,
-                chat_history: Optional[List[Tuple[str, str]]] = None) -> RewriteResult:
+                chat_history: list[tuple[str, str]] | None = None) -> RewriteResult:
         """
         Rewrite a question using chat history as context.
 
@@ -153,7 +153,7 @@ Question: {question}"""
                 logger.info(f"Question rewritten: '{question}' → '{rewritten}'")
                 reason = "Context added from chat history"
             else:
-                logger.info(f"Question unchanged (guardrail applied)")
+                logger.info("Question unchanged (guardrail applied)")
                 reason = "Guardrail: chat history independent or empty"
 
             return RewriteResult(
@@ -174,7 +174,7 @@ Question: {question}"""
             )
 
     @staticmethod
-    def _format_chat_history(chat_history: List[Tuple[str, str]]) -> str:
+    def _format_chat_history(chat_history: list[tuple[str, str]]) -> str:
         """Format chat history for inclusion in prompt"""
         if not chat_history:
             return "[Empty]"
@@ -190,7 +190,7 @@ Question: {question}"""
 
 # Convenience function
 def rewrite_question(question: str,
-                    chat_history: Optional[List[Tuple[str, str]]] = None) -> str:
+                    chat_history: list[tuple[str, str]] | None = None) -> str:
     """
     Simple function to rewrite a question.
 
@@ -208,7 +208,6 @@ def rewrite_question(question: str,
 
 if __name__ == "__main__":
     # Test
-    import os
     logging.basicConfig(level=logging.INFO)
 
     rewriter = QuestionRewriter()

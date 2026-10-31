@@ -2,8 +2,9 @@
 Unit tests for QuestionRewriter module
 """
 
-import pytest
 from unittest.mock import Mock, patch
+
+import pytest
 from question_rewriter import QuestionRewriter, RewriteResult
 
 
@@ -29,7 +30,7 @@ class TestQuestionRewriter:
 
         assert isinstance(result, RewriteResult)
         assert result.original_question == question
-        assert result.no_rewrite_flag == True
+        assert result.no_rewrite_flag
         assert result.reason == "Empty chat history - no rewrite needed"
 
     def test_rewrite_empty_list_history(self, rewriter):
@@ -39,7 +40,7 @@ class TestQuestionRewriter:
 
         result = rewriter.rewrite(question, chat_history)
 
-        assert result.no_rewrite_flag == True
+        assert result.no_rewrite_flag
 
     def test_rewrite_independent_history(self, rewriter):
         """Test that question is NOT rewritten when question is independent of history"""
@@ -52,7 +53,7 @@ class TestQuestionRewriter:
         result = rewriter.rewrite(question, chat_history)
 
         # Weather question is independent of contract history
-        assert result.no_rewrite_flag == True
+        assert result.no_rewrite_flag
 
     @patch('question_rewriter.ChatAnthropic')
     def test_rewrite_relevant_history(self, mock_anthropic, rewriter):
@@ -96,17 +97,14 @@ class TestQuestionRewriter:
             ("When does it start?", "January 1, 2024")
         ]
         question = "What are the key terms?"
-        result = rewriter.rewrite(question, relevant_history)
-        # Should detect relevance
+        rewriter.rewrite(question, relevant_history)
 
         # Independent history (completely different topic)
         independent_history = [
             ("What is 2+2?", "4"),
             ("What is Python?", "A programming language")
         ]
-        result2 = rewriter.rewrite(question, independent_history)
-        # Should detect independence
-        assert result.no_rewrite_flag != result2.no_rewrite_flag or True  # At least one should be flagged
+        rewriter.rewrite(question, independent_history)
 
 
 class TestRewriteResult:
@@ -124,7 +122,7 @@ class TestRewriteResult:
 
         assert result.original_question == "What is X?"
         assert result.rewritten_question == "What is X in the context of Y?"
-        assert result.no_rewrite_flag == False
+        assert not result.no_rewrite_flag
         assert result.reason == "Relevant history found"
         assert result.confidence == 0.85
 
@@ -150,10 +148,10 @@ class TestGuardrails:
     def test_guardrail_1_empty_history(self, rewriter):
         """GUARDRAIL 1: If chat history is empty → NO rewrite"""
         result = rewriter.rewrite("Any question", None)
-        assert result.no_rewrite_flag == True
+        assert result.no_rewrite_flag
 
         result = rewriter.rewrite("Any question", [])
-        assert result.no_rewrite_flag == True
+        assert result.no_rewrite_flag
 
     def test_guardrail_2_independent_question(self, rewriter):
         """GUARDRAIL 2: If history and question are independent → NO rewrite"""
@@ -165,7 +163,7 @@ class TestGuardrails:
 
         result = rewriter.rewrite(question, history)
         # This should detect independence and not rewrite
-        assert result.no_rewrite_flag == True
+        assert result.no_rewrite_flag
 
     def test_guardrail_3_only_rewrite_relevant(self, rewriter):
         """GUARDRAIL 3: Only rewrite when history provides relevant context"""
@@ -175,7 +173,7 @@ class TestGuardrails:
         ]
         question = "What about the renewal terms?"
 
-        result = rewriter.rewrite(question, history)
+        rewriter.rewrite(question, history)
         # Since both are contract-related, rewrite should be allowed
         # Result depends on relevance detection
 
