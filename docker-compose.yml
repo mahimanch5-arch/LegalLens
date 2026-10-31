@@ -1,0 +1,25 @@
+services:
+  backend:
+    build: ./backend
+    image: legallens-backend:latest
+    container_name: backend
+    env_file: ./backend/.env
+    ports:
+      - "8000:8000"
+    volumes:
+      - backend-data:/app/data
+    restart: unless-stopped
+
+  frontend:
+    build: ./frontend
+    image: legallens-frontend:latest
+    container_name: frontend
+    ports:
+      - "3000:3000"
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  backend-data:

@@ -1,0 +1,104 @@
+# Docker Build Context Exclusions
+# Reduces build context size and speeds up builds
+
+# Version Control
+.git
+.gitignore
+.gitattributes
+
+# Virtual Environments (will be recreated in builder stage)
+.venv
+venv
+env
+ENV
+
+# Dependencies (will be installed with uv)
+__pycache__
+*.pyc
+*.pyo
+*.egg-info
+*.egg
+dist
+build
+
+# Environment Files (secrets, not baked into image)
+.env
+.env.local
+.env.*.local
+.env.docker
+
+# IDE & Editor
+.vscode
+.idea
+*.swp
+*.swo
+*~
+.sublime-project
+.sublime-workspace
+.DS_Store
+Thumbs.db
+
+# Testing & Coverage
+tests
+test_*.py
+*_test.py
+.pytest_cache
+.coverage
+coverage.xml
+htmlcov
+.tox
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+*.db-journal
+
+# Logs
+*.log
+logs
+
+# OS Files
+.DS_Store
+.AppleDouble
+.LSOverride
+Thumbs.db
+
+# Caches
+.cache
+.ruff_cache
+.mypy_cache
+.pyre
+
+# Documentation
+docs
+README.md
+CONTRIBUTING.md
+LICENSE
+
+# GitHub
+.github
+
+# CI/CD
+.gitlab-ci.yml
+.github/workflows
+bitbucket-pipelines.yml
+.circleci
+
+# Docker (not needed in context)
+Dockerfile
+docker-compose.yml
+docker-compose.*.yml
+.dockerignore
+DOCKER.md
+DOCKER-TESTING-GUIDE.md
+
+# Development
+Makefile
+docker-compose.override.yml
+alembic/versions/*.py  # Database migrations (optional)
+
+# Misc
+.git-hooks
+pre-commit-config.yaml
+.pre-commit-hooks.yaml

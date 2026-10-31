@@ -1,0 +1,76 @@
+# Docker Build Context Exclusions
+# Reduces build context size and speeds up builds
+
+# Version Control
+.git
+.gitignore
+.gitattributes
+
+# Dependencies (will be reinstalled with npm ci)
+node_modules
+
+# Build Outputs (will be rebuilt)
+dist
+build
+
+# Development & Testing
+.venv
+venv
+.env
+.env.local
+.env.*.local
+.DS_Store
+Thumbs.db
+
+# IDE & Editor
+.vscode
+.idea
+*.swp
+*.swo
+*~
+.sublime-project
+.sublime-workspace
+
+# Package Manager
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.pnpm-store
+
+# Testing
+coverage
+.nyc_output
+.test.results
+
+# OS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Caches
+.eslintcache
+.cache
+.parcel-cache
+.next
+out
+
+# Documentation
+README.md
+CONTRIBUTING.md
+LICENSE
+docs
+
+# GitHub
+.github
+
+# CI/CD
+.gitlab-ci.yml
+.github/workflows
+bitbucket-pipelines.yml
+
+# Docker files in context (not needed)
+Dockerfile
+docker-compose.yml
+docker-compose.*.yml
+.dockerignore

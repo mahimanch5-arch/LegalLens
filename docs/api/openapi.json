@@ -1,0 +1,3163 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Legal Lens API",
+    "description": "Backend for Legal Lens (milestone M3). Contract mirrors frontend/src/api/types.ts.",
+    "version": "0.1.0"
+  },
+  "paths": {
+    "/api/auth/login": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Sign in — start here",
+        "description": "Signs in and sets the session cookie. Do this first: Swagger then sends the cookie with every\nother call.",
+        "operationId": "login_api_auth_login_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginRequest"
+              },
+              "examples": {
+                "demo": {
+                  "summary": "Demo user (dev defaults)",
+                  "value": {
+                    "email": "dana@whitfieldlaw.com",
+                    "password": "legallens"
+                  }
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/User"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/logout": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Logout",
+        "operationId": "logout_api_auth_logout_post",
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          }
+        }
+      }
+    },
+    "/api/auth/me": {
+      "get": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Me",
+        "operationId": "me_api_auth_me_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/User"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/conversations": {
+      "get": {
+        "tags": [
+          "conversations"
+        ],
+        "summary": "List Conversations",
+        "operationId": "list_conversations_api_conversations_get",
+        "parameters": [
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Page_Conversation_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "conversations"
+        ],
+        "summary": "New conversation (NCC) — no input needed",
+        "description": "Creates an empty conversation. **There is nothing to fill in**: click *Try it out*, then\n*Execute*. The backend assigns the id, title (\"New conversation\") and timestamps.\n\nCopy the `id` from the response and use it with **POST /api/conversations/{conversation_id}/messages**\nto ask the first question. (Sign in with POST /api/auth/login first, or this returns 401.)",
+        "operationId": "create_conversation_api_conversations_post",
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Conversation"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/conversations/{conversation_id}": {
+      "get": {
+        "tags": [
+          "conversations"
+        ],
+        "summary": "Get Conversation",
+        "operationId": "get_conversation_api_conversations__conversation_id__get",
+        "parameters": [
+          {
+            "name": "conversation_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Conversation Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConversationDetail"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "conversations"
+        ],
+        "summary": "Update Conversation",
+        "operationId": "update_conversation_api_conversations__conversation_id__patch",
+        "parameters": [
+          {
+            "name": "conversation_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Conversation Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateConversationRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Conversation"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "conversations"
+        ],
+        "summary": "Delete Conversation",
+        "operationId": "delete_conversation_api_conversations__conversation_id__delete",
+        "parameters": [
+          {
+            "name": "conversation_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Conversation Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/conversations/{conversation_id}/messages": {
+      "get": {
+        "tags": [
+          "conversations"
+        ],
+        "summary": "List Messages",
+        "operationId": "list_messages_api_conversations__conversation_id__messages_get",
+        "parameters": [
+          {
+            "name": "conversation_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Conversation Id"
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Page_Union_UserMessage__AssistantMessage__"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "conversations"
+        ],
+        "summary": "Send a message (ask, summarize or draft) — streamed",
+        "description": "One chat turn, streamed over server-sent events (FR-10).\n\nPaste the `id` returned by **POST /api/conversations** into `conversation_id`, pick an example from\nthe *Examples* dropdown (or write your own), then *Execute*. Swagger shows the whole stream once it\nhas finished: `meta`, `stage`s, `excerpt`s, `citation`s, `token`s, `usage`, then `done`.\nThe example document ids exist when the demo data is loaded (`scripts/seed_demo`).",
+        "operationId": "send_message_api_conversations__conversation_id__messages_post",
+        "parameters": [
+          {
+            "name": "conversation_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Conversation Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SendMessageRequest"
+              },
+              "examples": {
+                "ask": {
+                  "summary": "Ask across the whole workspace",
+                  "value": {
+                    "text": "What are the termination rights?",
+                    "mode": "auto",
+                    "scope": {
+                      "kind": "workspace"
+                    }
+                  }
+                },
+                "ask_one_document": {
+                  "summary": "Ask about one document",
+                  "value": {
+                    "text": "How long does the customer have to pay an invoice?",
+                    "mode": "ask",
+                    "scope": {
+                      "kind": "documents",
+                      "documentIds": [
+                        "doc_acme_msa"
+                      ]
+                    }
+                  }
+                },
+                "summary": {
+                  "summary": "Summarize a document",
+                  "value": {
+                    "text": "Summarize this agreement",
+                    "mode": "summary",
+                    "scope": {
+                      "kind": "documents",
+                      "documentIds": [
+                        "doc_acme_msa"
+                      ]
+                    },
+                    "summaryDocumentId": "doc_acme_msa"
+                  }
+                },
+                "draft": {
+                  "summary": "Draft a memo",
+                  "value": {
+                    "text": "Draft a memo",
+                    "mode": "draft",
+                    "scope": {
+                      "kind": "documents",
+                      "documentIds": [
+                        "doc_acme_msa",
+                        "doc_smith_v_jones"
+                      ]
+                    },
+                    "draftParams": {
+                      "draftType": "memo",
+                      "questionPresented": "Can a party give notice of breach by email alone?",
+                      "audience": "Supervising partner",
+                      "position": "",
+                      "tone": "neutral",
+                      "sourceDocumentIds": [
+                        "doc_acme_msa",
+                        "doc_smith_v_jones"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Server-sent events. Errors detected before the stream opens are returned as JSON.",
+            "content": {
+              "text/event-stream": {
+                "schema": {
+                  "type": "string",
+                  "description": "Events in order: meta · stage* · excerpt* · refusal? · (citation* summary)? · draft? · (token | citation)* · usage · done | error. See StreamEvent in types.ts."
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/feedback": {
+      "post": {
+        "tags": [
+          "conversations",
+          "feedback"
+        ],
+        "summary": "Feedback",
+        "description": "Thumbs up/down plus optional reason, linked to the message's trace (FR-25).",
+        "operationId": "feedback_api_feedback_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FeedbackRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/ask": {
+      "post": {
+        "tags": [
+          "modes"
+        ],
+        "summary": "Ask",
+        "operationId": "ask_api_ask_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ModeTurnRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Server-sent events. Errors detected before the stream opens are returned as JSON.",
+            "content": {
+              "text/event-stream": {
+                "schema": {
+                  "type": "string",
+                  "description": "Events in order: meta · stage* · excerpt* · refusal? · (citation* summary)? · draft? · (token | citation)* · usage · done | error. See StreamEvent in types.ts."
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/summarize": {
+      "post": {
+        "tags": [
+          "modes"
+        ],
+        "summary": "Summarize",
+        "operationId": "summarize_api_summarize_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ModeTurnRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Server-sent events. Errors detected before the stream opens are returned as JSON.",
+            "content": {
+              "text/event-stream": {
+                "schema": {
+                  "type": "string",
+                  "description": "Events in order: meta · stage* · excerpt* · refusal? · (citation* summary)? · draft? · (token | citation)* · usage · done | error. See StreamEvent in types.ts."
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/draft": {
+      "post": {
+        "tags": [
+          "modes"
+        ],
+        "summary": "Draft",
+        "operationId": "draft_api_draft_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ModeTurnRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Server-sent events. Errors detected before the stream opens are returned as JSON.",
+            "content": {
+              "text/event-stream": {
+                "schema": {
+                  "type": "string",
+                  "description": "Events in order: meta · stage* · excerpt* · refusal? · (citation* summary)? · draft? · (token | citation)* · usage · done | error. See StreamEvent in types.ts."
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/documents": {
+      "get": {
+        "tags": [
+          "documents"
+        ],
+        "summary": "List Documents",
+        "operationId": "list_documents_api_documents_get",
+        "parameters": [
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Page_LegalDocument_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "documents"
+        ],
+        "summary": "Upload",
+        "description": "Multipart upload, field ``files`` repeated. One bad file never rejects the batch (FR-3).",
+        "operationId": "upload_api_documents_post",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_upload_api_documents_post"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UploadResult"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "documents"
+        ],
+        "summary": "Delete Workspace",
+        "description": "Hard-deletes every document, its derived data, and every conversation (FR-26).",
+        "operationId": "delete_workspace_api_documents_delete",
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          }
+        }
+      }
+    },
+    "/api/documents/{document_id}": {
+      "get": {
+        "tags": [
+          "documents"
+        ],
+        "summary": "Get Document",
+        "operationId": "get_document_api_documents__document_id__get",
+        "parameters": [
+          {
+            "name": "document_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Document Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LegalDocument"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "documents"
+        ],
+        "summary": "Set Type",
+        "operationId": "set_type_api_documents__document_id__patch",
+        "parameters": [
+          {
+            "name": "document_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Document Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateDocumentRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LegalDocument"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "documents"
+        ],
+        "summary": "Delete Document",
+        "operationId": "delete_document_api_documents__document_id__delete",
+        "parameters": [
+          {
+            "name": "document_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Document Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/documents/{document_id}/status": {
+      "get": {
+        "tags": [
+          "documents"
+        ],
+        "summary": "Get Status",
+        "operationId": "get_status_api_documents__document_id__status_get",
+        "parameters": [
+          {
+            "name": "document_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Document Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DocumentStatus"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/documents/{document_id}/pages/{n}": {
+      "get": {
+        "tags": [
+          "documents"
+        ],
+        "summary": "Get Page",
+        "operationId": "get_page_api_documents__document_id__pages__n__get",
+        "parameters": [
+          {
+            "name": "document_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Document Id"
+            }
+          },
+          {
+            "name": "n",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "N"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DocumentPage"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/documents/{document_id}/file": {
+      "get": {
+        "tags": [
+          "documents"
+        ],
+        "summary": "Get File",
+        "description": "The original upload, decrypted — for the pdf.js viewer later.",
+        "operationId": "get_file_api_documents__document_id__file_get",
+        "parameters": [
+          {
+            "name": "document_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Document Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/spans/{span_id}": {
+      "get": {
+        "tags": [
+          "spans"
+        ],
+        "summary": "Get Span",
+        "description": "Resolves a citation's span to its exact text (FR-13).",
+        "operationId": "get_span_api_spans__span_id__get",
+        "parameters": [
+          {
+            "name": "span_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Span Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Span"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/traces/{trace_id}": {
+      "get": {
+        "tags": [
+          "observability"
+        ],
+        "summary": "Get Trace",
+        "operationId": "get_trace_api_traces__trace_id__get",
+        "parameters": [
+          {
+            "name": "trace_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Trace Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TraceDetail"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/usage": {
+      "get": {
+        "tags": [
+          "observability"
+        ],
+        "summary": "Get Usage",
+        "operationId": "get_usage_api_usage_get",
+        "parameters": [
+          {
+            "name": "start",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Start"
+            }
+          },
+          {
+            "name": "end",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "End"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UsageReport"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/health": {
+      "get": {
+        "tags": [
+          "health"
+        ],
+        "summary": "Health",
+        "operationId": "health_api_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Health"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/health/ready": {
+      "get": {
+        "tags": [
+          "health"
+        ],
+        "summary": "Ready",
+        "operationId": "ready_api_health_ready_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Health"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "ApiError": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "enum": [
+              "llm_unavailable",
+              "rate_limited",
+              "timeout",
+              "parse_failure",
+              "unknown"
+            ],
+            "title": "Code"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          },
+          "retryAfterSec": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Retryaftersec"
+          }
+        },
+        "type": "object",
+        "required": [
+          "code",
+          "message"
+        ],
+        "title": "ApiError"
+      },
+      "AssistantMessage": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "role": {
+            "type": "string",
+            "const": "assistant",
+            "title": "Role"
+          },
+          "createdAt": {
+            "type": "string",
+            "title": "Createdat"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "streaming",
+              "complete",
+              "incomplete",
+              "error"
+            ],
+            "title": "Status"
+          },
+          "intent": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "ask",
+                  "summary",
+                  "draft"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Intent"
+          },
+          "stage": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Stage"
+          },
+          "scopeUsed": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ScopeUsed"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "answerMd": {
+            "type": "string",
+            "title": "Answermd"
+          },
+          "citations": {
+            "items": {
+              "$ref": "#/components/schemas/Citation"
+            },
+            "type": "array",
+            "title": "Citations"
+          },
+          "excerpts": {
+            "items": {
+              "$ref": "#/components/schemas/Excerpt"
+            },
+            "type": "array",
+            "title": "Excerpts"
+          },
+          "refusal": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Refusal"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "summary": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SummaryResult"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "draft": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DraftMeta"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "error": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ApiError"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "usage": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Usage"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "feedback": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Feedback"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "traceId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Traceid"
+          },
+          "modelVersion": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Modelversion"
+          },
+          "promptVersion": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Promptversion"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "role",
+          "createdAt",
+          "status",
+          "intent",
+          "answerMd",
+          "citations",
+          "excerpts"
+        ],
+        "title": "AssistantMessage"
+      },
+      "Body_upload_api_documents_post": {
+        "properties": {
+          "files": {
+            "items": {
+              "type": "string",
+              "contentMediaType": "application/octet-stream"
+            },
+            "type": "array",
+            "title": "Files"
+          }
+        },
+        "type": "object",
+        "required": [
+          "files"
+        ],
+        "title": "Body_upload_api_documents_post"
+      },
+      "Citation": {
+        "properties": {
+          "n": {
+            "type": "integer",
+            "title": "N"
+          },
+          "spanId": {
+            "type": "string",
+            "title": "Spanid"
+          },
+          "documentId": {
+            "type": "string",
+            "title": "Documentid"
+          },
+          "documentName": {
+            "type": "string",
+            "title": "Documentname"
+          },
+          "page": {
+            "type": "integer",
+            "title": "Page"
+          },
+          "charStart": {
+            "type": "integer",
+            "title": "Charstart"
+          },
+          "charEnd": {
+            "type": "integer",
+            "title": "Charend"
+          },
+          "quote": {
+            "type": "string",
+            "title": "Quote"
+          },
+          "section": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Section"
+          }
+        },
+        "type": "object",
+        "required": [
+          "n",
+          "spanId",
+          "documentId",
+          "documentName",
+          "page",
+          "charStart",
+          "charEnd",
+          "quote"
+        ],
+        "title": "Citation"
+      },
+      "Conversation": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "lastIntent": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "ask",
+                  "summary",
+                  "draft"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lastintent"
+          },
+          "pinned": {
+            "type": "boolean",
+            "title": "Pinned"
+          },
+          "createdAt": {
+            "type": "string",
+            "title": "Createdat"
+          },
+          "updatedAt": {
+            "type": "string",
+            "title": "Updatedat"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "title",
+          "lastIntent",
+          "pinned",
+          "createdAt",
+          "updatedAt"
+        ],
+        "title": "Conversation"
+      },
+      "ConversationDetail": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "lastIntent": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "ask",
+                  "summary",
+                  "draft"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lastintent"
+          },
+          "pinned": {
+            "type": "boolean",
+            "title": "Pinned"
+          },
+          "createdAt": {
+            "type": "string",
+            "title": "Createdat"
+          },
+          "updatedAt": {
+            "type": "string",
+            "title": "Updatedat"
+          },
+          "messages": {
+            "items": {
+              "oneOf": [
+                {
+                  "$ref": "#/components/schemas/UserMessage"
+                },
+                {
+                  "$ref": "#/components/schemas/AssistantMessage"
+                }
+              ],
+              "discriminator": {
+                "propertyName": "role",
+                "mapping": {
+                  "assistant": "#/components/schemas/AssistantMessage",
+                  "user": "#/components/schemas/UserMessage"
+                }
+              }
+            },
+            "type": "array",
+            "title": "Messages"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "title",
+          "lastIntent",
+          "pinned",
+          "createdAt",
+          "updatedAt",
+          "messages"
+        ],
+        "title": "ConversationDetail"
+      },
+      "Coverage": {
+        "properties": {
+          "pagesTotal": {
+            "type": "integer",
+            "title": "Pagestotal"
+          },
+          "pagesCovered": {
+            "type": "integer",
+            "title": "Pagescovered"
+          },
+          "skippedPages": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Skippedpages"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          }
+        },
+        "type": "object",
+        "required": [
+          "pagesTotal",
+          "pagesCovered",
+          "skippedPages"
+        ],
+        "title": "Coverage"
+      },
+      "DocumentPage": {
+        "properties": {
+          "documentId": {
+            "type": "string",
+            "title": "Documentid"
+          },
+          "page": {
+            "type": "integer",
+            "title": "Page"
+          },
+          "text": {
+            "type": "string",
+            "title": "Text"
+          },
+          "ocrConfidence": {
+            "type": "number",
+            "title": "Ocrconfidence"
+          },
+          "lowOcr": {
+            "type": "boolean",
+            "title": "Lowocr"
+          }
+        },
+        "type": "object",
+        "required": [
+          "documentId",
+          "page",
+          "text",
+          "ocrConfidence",
+          "lowOcr"
+        ],
+        "title": "DocumentPage"
+      },
+      "DocumentStatus": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "queued",
+              "parsing",
+              "indexing",
+              "ready",
+              "failed"
+            ],
+            "title": "Status"
+          },
+          "progress": {
+            "type": "integer",
+            "title": "Progress"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status",
+          "progress"
+        ],
+        "title": "DocumentStatus"
+      },
+      "DocumentsScope": {
+        "properties": {
+          "kind": {
+            "type": "string",
+            "const": "documents",
+            "title": "Kind"
+          },
+          "documentIds": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Documentids"
+          }
+        },
+        "type": "object",
+        "required": [
+          "kind",
+          "documentIds"
+        ],
+        "title": "DocumentsScope"
+      },
+      "DraftMeta": {
+        "properties": {
+          "draftType": {
+            "type": "string",
+            "enum": [
+              "memo",
+              "brief"
+            ],
+            "title": "Drafttype"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "params": {
+            "$ref": "#/components/schemas/DraftParams"
+          },
+          "sources": {
+            "items": {
+              "$ref": "#/components/schemas/DraftSource"
+            },
+            "type": "array",
+            "title": "Sources"
+          }
+        },
+        "type": "object",
+        "required": [
+          "draftType",
+          "title",
+          "params",
+          "sources"
+        ],
+        "title": "DraftMeta"
+      },
+      "DraftParams": {
+        "properties": {
+          "draftType": {
+            "type": "string",
+            "enum": [
+              "memo",
+              "brief"
+            ],
+            "title": "Drafttype"
+          },
+          "questionPresented": {
+            "type": "string",
+            "maxLength": 4000,
+            "title": "Questionpresented"
+          },
+          "audience": {
+            "type": "string",
+            "maxLength": 300,
+            "title": "Audience",
+            "default": ""
+          },
+          "position": {
+            "type": "string",
+            "maxLength": 4000,
+            "title": "Position",
+            "default": ""
+          },
+          "tone": {
+            "type": "string",
+            "enum": [
+              "neutral",
+              "persuasive",
+              "formal"
+            ],
+            "title": "Tone",
+            "default": "neutral"
+          },
+          "sourceDocumentIds": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "maxItems": 50,
+            "title": "Sourcedocumentids"
+          }
+        },
+        "type": "object",
+        "required": [
+          "draftType",
+          "questionPresented"
+        ],
+        "title": "DraftParams"
+      },
+      "DraftSource": {
+        "properties": {
+          "documentId": {
+            "type": "string",
+            "title": "Documentid"
+          },
+          "documentName": {
+            "type": "string",
+            "title": "Documentname"
+          }
+        },
+        "type": "object",
+        "required": [
+          "documentId",
+          "documentName"
+        ],
+        "title": "DraftSource"
+      },
+      "Excerpt": {
+        "properties": {
+          "spanId": {
+            "type": "string",
+            "title": "Spanid"
+          },
+          "documentId": {
+            "type": "string",
+            "title": "Documentid"
+          },
+          "documentName": {
+            "type": "string",
+            "title": "Documentname"
+          },
+          "page": {
+            "type": "integer",
+            "title": "Page"
+          },
+          "section": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Section"
+          },
+          "text": {
+            "type": "string",
+            "title": "Text"
+          },
+          "score": {
+            "type": "number",
+            "title": "Score"
+          }
+        },
+        "type": "object",
+        "required": [
+          "spanId",
+          "documentId",
+          "documentName",
+          "page",
+          "text",
+          "score"
+        ],
+        "title": "Excerpt"
+      },
+      "Feedback": {
+        "properties": {
+          "rating": {
+            "type": "string",
+            "enum": [
+              "up",
+              "down"
+            ],
+            "title": "Rating"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "comment": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Comment"
+          }
+        },
+        "type": "object",
+        "required": [
+          "rating"
+        ],
+        "title": "Feedback"
+      },
+      "FeedbackRequest": {
+        "properties": {
+          "conversationId": {
+            "type": "string",
+            "title": "Conversationid"
+          },
+          "messageId": {
+            "type": "string",
+            "title": "Messageid"
+          },
+          "rating": {
+            "type": "string",
+            "enum": [
+              "up",
+              "down"
+            ],
+            "title": "Rating"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 120
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "comment": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 4000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Comment"
+          }
+        },
+        "type": "object",
+        "required": [
+          "conversationId",
+          "messageId",
+          "rating"
+        ],
+        "title": "FeedbackRequest"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "Health": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "ok",
+              "degraded"
+            ],
+            "title": "Status"
+          },
+          "version": {
+            "type": "string",
+            "title": "Version"
+          },
+          "checks": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "type": "boolean"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Checks"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status",
+          "version"
+        ],
+        "title": "Health"
+      },
+      "LegalDocument": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "mimeType": {
+            "type": "string",
+            "title": "Mimetype"
+          },
+          "sizeBytes": {
+            "type": "integer",
+            "title": "Sizebytes"
+          },
+          "pages": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pages"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "contract",
+              "opinion",
+              "pleading",
+              "other"
+            ],
+            "title": "Type"
+          },
+          "typeConfidence": {
+            "type": "number",
+            "title": "Typeconfidence"
+          },
+          "typeOverridden": {
+            "type": "boolean",
+            "title": "Typeoverridden"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "queued",
+              "parsing",
+              "indexing",
+              "ready",
+              "failed"
+            ],
+            "title": "Status"
+          },
+          "progress": {
+            "type": "integer",
+            "title": "Progress"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          },
+          "lowOcrPages": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Lowocrpages"
+          },
+          "uploadedAt": {
+            "type": "string",
+            "title": "Uploadedat"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "mimeType",
+          "sizeBytes",
+          "pages",
+          "type",
+          "typeConfidence",
+          "typeOverridden",
+          "status",
+          "progress",
+          "lowOcrPages",
+          "uploadedAt"
+        ],
+        "title": "LegalDocument"
+      },
+      "LoginRequest": {
+        "properties": {
+          "email": {
+            "type": "string",
+            "maxLength": 320,
+            "minLength": 1,
+            "title": "Email"
+          },
+          "password": {
+            "type": "string",
+            "maxLength": 1000,
+            "minLength": 1,
+            "title": "Password"
+          }
+        },
+        "type": "object",
+        "required": [
+          "email",
+          "password"
+        ],
+        "title": "LoginRequest"
+      },
+      "ModeTurnRequest": {
+        "properties": {
+          "text": {
+            "type": "string",
+            "maxLength": 8000,
+            "minLength": 1,
+            "title": "Text"
+          },
+          "mode": {
+            "type": "string",
+            "enum": [
+              "auto",
+              "ask",
+              "summary",
+              "draft"
+            ],
+            "title": "Mode",
+            "default": "auto"
+          },
+          "scope": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/WorkspaceScope"
+              },
+              {
+                "$ref": "#/components/schemas/DocumentsScope"
+              }
+            ],
+            "title": "Scope",
+            "discriminator": {
+              "propertyName": "kind",
+              "mapping": {
+                "documents": "#/components/schemas/DocumentsScope",
+                "workspace": "#/components/schemas/WorkspaceScope"
+              }
+            }
+          },
+          "draftParams": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DraftParams"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "summaryDocumentId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Summarydocumentid"
+          },
+          "conversationId": {
+            "type": "string",
+            "title": "Conversationid"
+          }
+        },
+        "type": "object",
+        "required": [
+          "text",
+          "conversationId"
+        ],
+        "title": "ModeTurnRequest",
+        "description": "Body of the explicit mode endpoints (/api/ask, /api/summarize, /api/draft)."
+      },
+      "Page_Conversation_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/Conversation"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "nextCursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Nextcursor"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items"
+        ],
+        "title": "Page[Conversation]"
+      },
+      "Page_LegalDocument_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/LegalDocument"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "nextCursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Nextcursor"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items"
+        ],
+        "title": "Page[LegalDocument]"
+      },
+      "Page_Union_UserMessage__AssistantMessage__": {
+        "properties": {
+          "items": {
+            "items": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/UserMessage"
+                },
+                {
+                  "$ref": "#/components/schemas/AssistantMessage"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "nextCursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Nextcursor"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items"
+        ],
+        "title": "Page[Union[UserMessage, AssistantMessage]]"
+      },
+      "Refusal": {
+        "properties": {
+          "reason": {
+            "type": "string",
+            "title": "Reason"
+          },
+          "scopeLabel": {
+            "type": "string",
+            "title": "Scopelabel"
+          },
+          "suggestions": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Suggestions"
+          }
+        },
+        "type": "object",
+        "required": [
+          "reason",
+          "scopeLabel",
+          "suggestions"
+        ],
+        "title": "Refusal"
+      },
+      "RejectedUpload": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "reason": {
+            "type": "string",
+            "title": "Reason"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "reason"
+        ],
+        "title": "RejectedUpload"
+      },
+      "RetrievalCandidate": {
+        "properties": {
+          "spanId": {
+            "type": "string",
+            "title": "Spanid"
+          },
+          "score": {
+            "type": "number",
+            "title": "Score"
+          }
+        },
+        "type": "object",
+        "required": [
+          "spanId",
+          "score"
+        ],
+        "title": "RetrievalCandidate"
+      },
+      "ScopeUsed": {
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "workspace",
+              "documents"
+            ],
+            "title": "Kind"
+          },
+          "documentIds": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Documentids"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          }
+        },
+        "type": "object",
+        "required": [
+          "kind",
+          "documentIds",
+          "label"
+        ],
+        "title": "ScopeUsed"
+      },
+      "SendMessageRequest": {
+        "properties": {
+          "text": {
+            "type": "string",
+            "maxLength": 8000,
+            "minLength": 1,
+            "title": "Text"
+          },
+          "mode": {
+            "type": "string",
+            "enum": [
+              "auto",
+              "ask",
+              "summary",
+              "draft"
+            ],
+            "title": "Mode",
+            "default": "auto"
+          },
+          "scope": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/WorkspaceScope"
+              },
+              {
+                "$ref": "#/components/schemas/DocumentsScope"
+              }
+            ],
+            "title": "Scope",
+            "discriminator": {
+              "propertyName": "kind",
+              "mapping": {
+                "documents": "#/components/schemas/DocumentsScope",
+                "workspace": "#/components/schemas/WorkspaceScope"
+              }
+            }
+          },
+          "draftParams": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DraftParams"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "summaryDocumentId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Summarydocumentid"
+          }
+        },
+        "type": "object",
+        "required": [
+          "text"
+        ],
+        "title": "SendMessageRequest"
+      },
+      "Span": {
+        "properties": {
+          "spanId": {
+            "type": "string",
+            "title": "Spanid"
+          },
+          "documentId": {
+            "type": "string",
+            "title": "Documentid"
+          },
+          "documentName": {
+            "type": "string",
+            "title": "Documentname"
+          },
+          "page": {
+            "type": "integer",
+            "title": "Page"
+          },
+          "charStart": {
+            "type": "integer",
+            "title": "Charstart"
+          },
+          "charEnd": {
+            "type": "integer",
+            "title": "Charend"
+          },
+          "text": {
+            "type": "string",
+            "title": "Text"
+          }
+        },
+        "type": "object",
+        "required": [
+          "spanId",
+          "documentId",
+          "documentName",
+          "page",
+          "charStart",
+          "charEnd",
+          "text"
+        ],
+        "title": "Span"
+      },
+      "SummaryField": {
+        "properties": {
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value"
+          },
+          "citations": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Citations"
+          },
+          "flag": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Flag"
+          }
+        },
+        "type": "object",
+        "required": [
+          "label",
+          "value",
+          "citations"
+        ],
+        "title": "SummaryField"
+      },
+      "SummaryResult": {
+        "properties": {
+          "documentId": {
+            "type": "string",
+            "title": "Documentid"
+          },
+          "documentName": {
+            "type": "string",
+            "title": "Documentname"
+          },
+          "docType": {
+            "type": "string",
+            "enum": [
+              "contract",
+              "opinion",
+              "pleading",
+              "other"
+            ],
+            "title": "Doctype"
+          },
+          "sections": {
+            "items": {
+              "$ref": "#/components/schemas/SummarySection"
+            },
+            "type": "array",
+            "title": "Sections"
+          },
+          "coverage": {
+            "$ref": "#/components/schemas/Coverage"
+          }
+        },
+        "type": "object",
+        "required": [
+          "documentId",
+          "documentName",
+          "docType",
+          "sections",
+          "coverage"
+        ],
+        "title": "SummaryResult"
+      },
+      "SummarySection": {
+        "properties": {
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "fields": {
+            "items": {
+              "$ref": "#/components/schemas/SummaryField"
+            },
+            "type": "array",
+            "title": "Fields"
+          }
+        },
+        "type": "object",
+        "required": [
+          "title",
+          "fields"
+        ],
+        "title": "SummarySection"
+      },
+      "TraceDetail": {
+        "properties": {
+          "traceId": {
+            "type": "string",
+            "title": "Traceid"
+          },
+          "messageId": {
+            "type": "string",
+            "title": "Messageid"
+          },
+          "conversationId": {
+            "type": "string",
+            "title": "Conversationid"
+          },
+          "intent": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "ask",
+                  "summary",
+                  "draft"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Intent"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "stages": {
+            "items": {
+              "$ref": "#/components/schemas/TraceStage"
+            },
+            "type": "array",
+            "title": "Stages"
+          },
+          "retrieval": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TraceRetrieval"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "modelVersion": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Modelversion"
+          },
+          "promptVersion": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Promptversion"
+          },
+          "createdAt": {
+            "type": "string",
+            "title": "Createdat"
+          }
+        },
+        "type": "object",
+        "required": [
+          "traceId",
+          "messageId",
+          "conversationId",
+          "intent",
+          "status",
+          "stages",
+          "retrieval",
+          "modelVersion",
+          "promptVersion",
+          "createdAt"
+        ],
+        "title": "TraceDetail"
+      },
+      "TraceRetrieval": {
+        "properties": {
+          "query": {
+            "type": "string",
+            "title": "Query"
+          },
+          "candidates": {
+            "items": {
+              "$ref": "#/components/schemas/RetrievalCandidate"
+            },
+            "type": "array",
+            "title": "Candidates"
+          }
+        },
+        "type": "object",
+        "required": [
+          "query",
+          "candidates"
+        ],
+        "title": "TraceRetrieval"
+      },
+      "TraceStage": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "startedAt": {
+            "type": "string",
+            "title": "Startedat"
+          },
+          "latencyMs": {
+            "type": "integer",
+            "title": "Latencyms"
+          },
+          "costUsd": {
+            "type": "number",
+            "title": "Costusd",
+            "default": 0.0
+          },
+          "detail": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "startedAt",
+          "latencyMs"
+        ],
+        "title": "TraceStage"
+      },
+      "UpdateConversationRequest": {
+        "properties": {
+          "title": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 500
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          },
+          "pinned": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pinned"
+          }
+        },
+        "type": "object",
+        "title": "UpdateConversationRequest"
+      },
+      "UpdateDocumentRequest": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "contract",
+              "opinion",
+              "pleading",
+              "other"
+            ],
+            "title": "Type"
+          }
+        },
+        "type": "object",
+        "required": [
+          "type"
+        ],
+        "title": "UpdateDocumentRequest"
+      },
+      "UploadResult": {
+        "properties": {
+          "created": {
+            "items": {
+              "$ref": "#/components/schemas/LegalDocument"
+            },
+            "type": "array",
+            "title": "Created"
+          },
+          "rejected": {
+            "items": {
+              "$ref": "#/components/schemas/RejectedUpload"
+            },
+            "type": "array",
+            "title": "Rejected"
+          }
+        },
+        "type": "object",
+        "required": [
+          "created",
+          "rejected"
+        ],
+        "title": "UploadResult"
+      },
+      "Usage": {
+        "properties": {
+          "inputTokens": {
+            "type": "integer",
+            "title": "Inputtokens"
+          },
+          "outputTokens": {
+            "type": "integer",
+            "title": "Outputtokens"
+          },
+          "costUsd": {
+            "type": "number",
+            "title": "Costusd"
+          },
+          "latencyMs": {
+            "type": "integer",
+            "title": "Latencyms"
+          }
+        },
+        "type": "object",
+        "required": [
+          "inputTokens",
+          "outputTokens",
+          "costUsd",
+          "latencyMs"
+        ],
+        "title": "Usage"
+      },
+      "UsageDay": {
+        "properties": {
+          "turns": {
+            "type": "integer",
+            "title": "Turns"
+          },
+          "inputTokens": {
+            "type": "integer",
+            "title": "Inputtokens"
+          },
+          "outputTokens": {
+            "type": "integer",
+            "title": "Outputtokens"
+          },
+          "costUsd": {
+            "type": "number",
+            "title": "Costusd"
+          },
+          "day": {
+            "type": "string",
+            "title": "Day"
+          }
+        },
+        "type": "object",
+        "required": [
+          "turns",
+          "inputTokens",
+          "outputTokens",
+          "costUsd",
+          "day"
+        ],
+        "title": "UsageDay"
+      },
+      "UsageReport": {
+        "properties": {
+          "totals": {
+            "$ref": "#/components/schemas/UsageTotals"
+          },
+          "byIntent": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/UsageTotals"
+            },
+            "type": "object",
+            "title": "Byintent"
+          },
+          "byDay": {
+            "items": {
+              "$ref": "#/components/schemas/UsageDay"
+            },
+            "type": "array",
+            "title": "Byday"
+          }
+        },
+        "type": "object",
+        "required": [
+          "totals",
+          "byIntent",
+          "byDay"
+        ],
+        "title": "UsageReport"
+      },
+      "UsageTotals": {
+        "properties": {
+          "turns": {
+            "type": "integer",
+            "title": "Turns"
+          },
+          "inputTokens": {
+            "type": "integer",
+            "title": "Inputtokens"
+          },
+          "outputTokens": {
+            "type": "integer",
+            "title": "Outputtokens"
+          },
+          "costUsd": {
+            "type": "number",
+            "title": "Costusd"
+          }
+        },
+        "type": "object",
+        "required": [
+          "turns",
+          "inputTokens",
+          "outputTokens",
+          "costUsd"
+        ],
+        "title": "UsageTotals"
+      },
+      "User": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "email": {
+            "type": "string",
+            "title": "Email"
+          },
+          "initials": {
+            "type": "string",
+            "title": "Initials"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "email",
+          "initials"
+        ],
+        "title": "User"
+      },
+      "UserMessage": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "role": {
+            "type": "string",
+            "const": "user",
+            "title": "Role"
+          },
+          "text": {
+            "type": "string",
+            "title": "Text"
+          },
+          "mode": {
+            "type": "string",
+            "enum": [
+              "auto",
+              "ask",
+              "summary",
+              "draft"
+            ],
+            "title": "Mode"
+          },
+          "scope": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/WorkspaceScope"
+              },
+              {
+                "$ref": "#/components/schemas/DocumentsScope"
+              }
+            ],
+            "title": "Scope",
+            "discriminator": {
+              "propertyName": "kind",
+              "mapping": {
+                "documents": "#/components/schemas/DocumentsScope",
+                "workspace": "#/components/schemas/WorkspaceScope"
+              }
+            }
+          },
+          "draftParams": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DraftParams"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "summaryDocumentId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Summarydocumentid"
+          },
+          "createdAt": {
+            "type": "string",
+            "title": "Createdat"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "role",
+          "text",
+          "mode",
+          "scope",
+          "createdAt"
+        ],
+        "title": "UserMessage"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      },
+      "WorkspaceScope": {
+        "properties": {
+          "kind": {
+            "type": "string",
+            "const": "workspace",
+            "title": "Kind"
+          }
+        },
+        "type": "object",
+        "required": [
+          "kind"
+        ],
+        "title": "WorkspaceScope"
+      }
+    }
+  }
+}
