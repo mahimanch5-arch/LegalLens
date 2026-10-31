@@ -60,8 +60,6 @@ jobs:
     name: Lint (ruff)
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    # Non-blocking until the existing ruff backlog is cleared
-    continue-on-error: true
     steps:
       - uses: actions/checkout@v4
 
