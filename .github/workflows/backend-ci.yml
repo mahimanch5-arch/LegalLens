@@ -78,8 +78,6 @@ jobs:
     name: Type check (mypy)
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    # Non-blocking until the existing mypy backlog is cleared
-    continue-on-error: true
     steps:
       - uses: actions/checkout@v4
 

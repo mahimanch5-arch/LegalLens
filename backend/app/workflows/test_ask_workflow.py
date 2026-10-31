@@ -3,6 +3,7 @@ Unit tests for Ask Workflow module
 """
 
 import contextlib
+from typing import Any
 from unittest.mock import Mock, patch
 
 import pytest
@@ -12,7 +13,7 @@ from ask_workflow import AskResult, AskWorkflow
 class TestAskResult:
     """Test suite for AskResult dataclass"""
 
-    def test_ask_result_creation(self):
+    def test_ask_result_creation(self) -> None:
         """Test AskResult object creation"""
         result = AskResult(
             original_question="What is X?",
@@ -26,7 +27,7 @@ class TestAskResult:
         assert result.rewritten_question == "What is X in the context of Y?"
         assert result.generated_answer == "The answer is..."
 
-    def test_ask_result_with_citations(self):
+    def test_ask_result_with_citations(self) -> None:
         """Test AskResult with citations"""
         citations = [
             {
@@ -49,7 +50,7 @@ class TestAskResult:
         assert len(result.citations) == 1
         assert result.citations[0]["citation_number"] == 1
 
-    def test_ask_result_metadata(self):
+    def test_ask_result_metadata(self) -> None:
         """Test AskResult with metadata"""
         metadata = {
             "retrieval_count": 50,
@@ -74,11 +75,11 @@ class TestAskWorkflowInit:
     """Test AskWorkflow initialization"""
 
     @pytest.fixture
-    def mock_retriever(self):
+    def mock_retriever(self) -> Any:
         """Create a mock retriever"""
         return Mock()
 
-    def test_workflow_initialization(self, mock_retriever):
+    def test_workflow_initialization(self, mock_retriever: Any) -> None:
         """Test AskWorkflow initialization"""
         with patch('ask_workflow.QuestionRewriter'), patch('ask_workflow.RerankerPipeline'), \
                 patch('ask_workflow.ChatAnthropic'):
@@ -87,7 +88,7 @@ class TestAskWorkflowInit:
             assert workflow.retriever == mock_retriever
             assert workflow.reranker_top_k == 10
 
-    def test_workflow_with_custom_model(self, mock_retriever):
+    def test_workflow_with_custom_model(self, mock_retriever: Any) -> None:
         """Test AskWorkflow with custom LLM model"""
         with patch('ask_workflow.QuestionRewriter'), patch('ask_workflow.RerankerPipeline'), \
                 patch('ask_workflow.ChatAnthropic') as mock_anthropic:
@@ -106,7 +107,7 @@ class TestAskWorkflowExecution:
     """Test AskWorkflow.execute() method"""
 
     @pytest.fixture
-    def mock_components(self):
+    def mock_components(self) -> Any:
         """Create mock components"""
         retriever = Mock()
 
@@ -151,7 +152,7 @@ class TestAskWorkflowExecution:
             "llm_response": llm_response
         }
 
-    def test_execute_five_step_pipeline(self, mock_components):
+    def test_execute_five_step_pipeline(self, mock_components: Any) -> None:
         """Test complete five-step Ask workflow pipeline"""
         with patch('ask_workflow.QuestionRewriter') as mock_qr_class, \
                 patch('ask_workflow.RerankerPipeline') as mock_rr_class, \
@@ -179,7 +180,7 @@ class TestAskWorkflowExecution:
             assert len(result.retrieved_chunks) > 0
             assert result.generated_answer is not None
 
-    def test_execute_with_chat_history(self, mock_components):
+    def test_execute_with_chat_history(self, mock_components: Any) -> None:
         """Test execute with chat history"""
         with patch('ask_workflow.QuestionRewriter') as mock_qr_class, \
                 patch('ask_workflow.RerankerPipeline'), \
@@ -201,7 +202,7 @@ class TestAskWorkflowExecution:
             # Verify rewriter was called with history
             mock_qr.rewrite.assert_called_with("Follow-up question", chat_history)
 
-    def test_execute_with_document_filter(self, mock_components):
+    def test_execute_with_document_filter(self, mock_components: Any) -> None:
         """Test execute with document filter"""
         with patch('ask_workflow.QuestionRewriter'), patch('ask_workflow.RerankerPipeline'), \
                 patch('ask_workflow.ChatAnthropic'):
@@ -217,7 +218,7 @@ class TestAskWorkflowExecution:
 class TestRAGContextBuilding:
     """Test RAG context building"""
 
-    def test_build_rag_context(self):
+    def test_build_rag_context(self) -> None:
         """Test RAG context building from ranked chunks"""
         ranked_chunks = [
             Mock(
@@ -237,7 +238,7 @@ class TestRAGContextBuilding:
         assert "[1]" in context  # Should have numbered citations
         assert "[2]" in context
 
-    def test_rag_context_with_sources(self):
+    def test_rag_context_with_sources(self) -> None:
         """Test that RAG context includes source information"""
         ranked_chunks = [
             Mock(
@@ -254,7 +255,7 @@ class TestRAGContextBuilding:
 class TestCitationExtraction:
     """Test citation extraction from generated answers"""
 
-    def test_extract_basic_citations(self):
+    def test_extract_basic_citations(self) -> None:
         """Test extraction of basic [n] citations"""
         answer = "The contract states [1] that termination requires [2] thirty days notice."
         chunks = [
@@ -268,7 +269,7 @@ class TestCitationExtraction:
         assert citations[0]["citation_number"] == 1
         assert citations[1]["citation_number"] == 2
 
-    def test_extract_citations_matching(self):
+    def test_extract_citations_matching(self) -> None:
         """Test that extracted citations match chunk references"""
         answer = "According to [1] the agreement, [2] renewal is automatic."
         chunks = [
@@ -282,7 +283,7 @@ class TestCitationExtraction:
         assert citations[0]["chunk_id"] == "c1"
         assert citations[1]["chunk_id"] == "c2"
 
-    def test_extract_citations_out_of_range(self):
+    def test_extract_citations_out_of_range(self) -> None:
         """Test handling of out-of-range citation numbers"""
         answer = "Reference [1] and [10]"
         chunks = [
@@ -295,16 +296,16 @@ class TestCitationExtraction:
         assert len(citations) == 1
         assert citations[0]["citation_number"] == 1
 
-    def test_extract_no_citations(self):
+    def test_extract_no_citations(self) -> None:
         """Test handling of answers with no citations"""
         answer = "This is an answer without any citations."
-        chunks = []
+        chunks: list[Any] = []
 
         citations = AskWorkflow._extract_citations(answer, chunks)
 
         assert len(citations) == 0
 
-    def test_extract_duplicate_citations(self):
+    def test_extract_duplicate_citations(self) -> None:
         """Test handling of duplicate citation numbers"""
         answer = "First [1] and second mention of [1]."
         chunks = [
@@ -322,13 +323,13 @@ class TestAnswerGeneration:
     """Test answer generation with Claude"""
 
     @pytest.fixture
-    def mock_llm(self):
+    def mock_llm(self) -> Any:
         """Create a mock LLM"""
         mock = Mock()
         mock.invoke.return_value.content = "Generated answer[1]"
         return mock
 
-    def test_generate_answer_with_context(self, mock_llm):
+    def test_generate_answer_with_context(self, mock_llm: Any) -> None:
         """Test answer generation with RAG context"""
         workflow = AskWorkflow(Mock())
         workflow.llm = mock_llm
@@ -346,7 +347,7 @@ class TestAnswerGeneration:
         call_args = mock_llm.invoke.call_args
         assert "system" in str(call_args).lower() or call_args[0][0][0]["role"] == "system"
 
-    def test_generate_answer_system_prompt(self, mock_llm):
+    def test_generate_answer_system_prompt(self, mock_llm: Any) -> None:
         """Test that system prompt includes RAG context"""
         workflow = AskWorkflow(Mock())
         workflow.llm = mock_llm
@@ -363,7 +364,7 @@ class TestAnswerGeneration:
 class TestErrorHandling:
     """Test error handling in Ask workflow"""
 
-    def test_execute_handles_rewrite_error(self):
+    def test_execute_handles_rewrite_error(self) -> None:
         """Test handling of question rewriting errors"""
         with patch('ask_workflow.QuestionRewriter') as mock_qr_class:
             mock_qr = Mock()
@@ -377,7 +378,7 @@ class TestErrorHandling:
             with pytest.raises(Exception, match="Rewrite failed"):
                 workflow.execute("Question")
 
-    def test_execute_handles_retrieval_error(self):
+    def test_execute_handles_retrieval_error(self) -> None:
         """Test handling of retrieval errors"""
         mock_retriever = Mock()
         mock_retriever.hybrid_search.side_effect = Exception("Retrieval failed")
@@ -390,7 +391,7 @@ class TestErrorHandling:
             with pytest.raises(Exception, match="Retrieval failed"):
                 workflow.execute("Question")
 
-    def test_execute_handles_generation_error(self):
+    def test_execute_handles_generation_error(self) -> None:
         """Test handling of LLM generation errors"""
         mock_retriever = Mock()
         mock_retriever.hybrid_search.return_value = [Mock(chunk_id="c1", document_id="d1", text="t", metadata={})]
@@ -411,7 +412,7 @@ class TestErrorHandling:
 class TestConvenienceFunction:
     """Test convenience function"""
 
-    def test_ask_convenience_function(self):
+    def test_ask_convenience_function(self) -> None:
         """Test the ask() convenience function"""
         mock_retriever = Mock()
 
@@ -432,7 +433,7 @@ class TestConvenienceFunction:
 class TestPerformance:
     """Test performance characteristics"""
 
-    def test_execution_timing_structure(self):
+    def test_execution_timing_structure(self) -> None:
         """Test that execution follows expected timing structure"""
         # Verify that each step logs timing information
         mock_retriever = Mock()
@@ -448,12 +449,12 @@ class TestPerformance:
 class TestIntegration:
     """Integration tests for Ask workflow"""
 
-    def test_full_pipeline_structure(self):
+    def test_full_pipeline_structure(self) -> None:
         """Test that full pipeline executes in correct order"""
         execution_order = []
 
-        def track_execution(name):
-            def tracker(*args, **kwargs):
+        def track_execution(name: str) -> Any:
+            def tracker(*args: Any, **kwargs: Any) -> Any:
                 execution_order.append(name)
                 return Mock()
             return tracker

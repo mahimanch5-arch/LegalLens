@@ -2,6 +2,7 @@
 Unit tests for HybridRetrieval module
 """
 
+from typing import Any
 from unittest.mock import Mock
 
 import pytest
@@ -11,7 +12,7 @@ from hybrid_retrieval import ChromaVectorHybridRetriever, HybridRetriever, Retri
 class TestRetrievalResult:
     """Test suite for RetrievalResult dataclass"""
 
-    def test_retrieval_result_creation(self):
+    def test_retrieval_result_creation(self) -> None:
         """Test RetrievalResult object creation"""
         result = RetrievalResult(
             chunk_id="chunk_123",
@@ -27,7 +28,7 @@ class TestRetrievalResult:
         assert result.score == 0.85
         assert result.source == "vector_search"
 
-    def test_retrieval_result_with_metadata(self):
+    def test_retrieval_result_with_metadata(self) -> None:
         """Test RetrievalResult with metadata"""
         metadata = {"filename": "contract.pdf", "page": 5}
         result = RetrievalResult(
@@ -45,7 +46,7 @@ class TestRetrievalResult:
 class TestHybridRetriever:
     """Test suite for HybridRetriever abstract class"""
 
-    def test_retriever_interface(self):
+    def test_retriever_interface(self) -> None:
         """Test that HybridRetriever defines required interface"""
         # HybridRetriever is abstract, so we can't instantiate it directly
         # But we can verify it has the required methods
@@ -58,18 +59,18 @@ class TestChromaVectorHybridRetriever:
     """Test suite for ChromaVectorHybridRetriever"""
 
     @pytest.fixture
-    def mock_vector_store(self):
+    def mock_vector_store(self) -> Any:
         """Create a mock vector store"""
         return Mock()
 
     @pytest.fixture
-    def retriever(self, mock_vector_store):
+    def retriever(self, mock_vector_store: Any) -> Any:
         """Create a retriever with mock vector store"""
         retriever = ChromaVectorHybridRetriever()
         retriever.vector_store = mock_vector_store
         return retriever
 
-    def test_vector_search(self, retriever, mock_vector_store):
+    def test_vector_search(self, retriever: Any, mock_vector_store: Any) -> None:
         """Test vector search functionality"""
         # Setup mock response
         mock_vector_store.similarity_search_with_score.return_value = [
@@ -84,7 +85,7 @@ class TestChromaVectorHybridRetriever:
         assert results[0].score == 0.9
         assert results[1].score == 0.8
 
-    def test_keyword_search(self, retriever, mock_vector_store):
+    def test_keyword_search(self, retriever: Any, mock_vector_store: Any) -> None:
         """Test keyword search (BM25) functionality"""
         # Mock BM25 search
         retriever.bm25 = Mock()
@@ -99,7 +100,7 @@ class TestChromaVectorHybridRetriever:
         assert len(results) == 2
         assert all(isinstance(r, RetrievalResult) for r in results)
 
-    def test_hybrid_search_merging(self, retriever, mock_vector_store):
+    def test_hybrid_search_merging(self, retriever: Any, mock_vector_store: Any) -> None:
         """Test that hybrid search merges vector and keyword results"""
         # Setup mock vector search
         mock_vector_store.similarity_search_with_score.return_value = [
@@ -118,7 +119,7 @@ class TestChromaVectorHybridRetriever:
         assert len(results) >= 1
         assert all(isinstance(r, RetrievalResult) for r in results)
 
-    def test_hybrid_search_deduplication(self, retriever, mock_vector_store):
+    def test_hybrid_search_deduplication(self, retriever: Any, mock_vector_store: Any) -> None:
         """Test that hybrid search deduplicates results"""
         # Setup: same chunk from both searches
         duplicate_chunk = Mock(
@@ -141,7 +142,7 @@ class TestChromaVectorHybridRetriever:
         chunk_ids = [r.chunk_id for r in results]
         assert chunk_ids.count("c1") == 1
 
-    def test_document_filtering(self, retriever, mock_vector_store):
+    def test_document_filtering(self, retriever: Any, mock_vector_store: Any) -> None:
         """Test that results can be filtered by document ID"""
         # Setup mock with mixed documents
         mock_vector_store.similarity_search_with_score.return_value = [
@@ -155,7 +156,7 @@ class TestChromaVectorHybridRetriever:
         # Should only return results from doc1
         assert all(r.document_id == "doc1" for r in results)
 
-    def test_score_normalization(self, retriever, mock_vector_store):
+    def test_score_normalization(self, retriever: Any, mock_vector_store: Any) -> None:
         """Test that scores are normalized to 0-1 range"""
         mock_vector_store.similarity_search_with_score.return_value = [
             (Mock(page_content="Result", metadata={"chunk_id": "c1", "document_id": "d1"}), 0.95),
@@ -165,7 +166,7 @@ class TestChromaVectorHybridRetriever:
 
         assert 0.0 <= results[0].score <= 1.0
 
-    def test_empty_results(self, retriever, mock_vector_store):
+    def test_empty_results(self, retriever: Any, mock_vector_store: Any) -> None:
         """Test handling of empty search results"""
         mock_vector_store.similarity_search_with_score.return_value = []
 
@@ -173,7 +174,7 @@ class TestChromaVectorHybridRetriever:
 
         assert results == []
 
-    def test_top_k_parameter(self, retriever, mock_vector_store):
+    def test_top_k_parameter(self, retriever: Any, mock_vector_store: Any) -> None:
         """Test that top_k parameter is respected"""
         # Setup: 5 results available
         mock_vector_store.similarity_search_with_score.return_value = [
@@ -191,12 +192,12 @@ class TestScoreAveraging:
     """Test score averaging when merging duplicate results"""
 
     @pytest.fixture
-    def retriever(self):
+    def retriever(self) -> Any:
         retriever = ChromaVectorHybridRetriever()
         retriever.vector_store = Mock()
         return retriever
 
-    def test_score_averaging_on_merge(self, retriever):
+    def test_score_averaging_on_merge(self, retriever: Any) -> None:
         """Test that duplicate results have scores averaged"""
         # When a chunk appears in both vector and keyword results,
         # its score should be the average of both
@@ -227,12 +228,12 @@ class TestErrorHandling:
     """Test error handling in hybrid retrieval"""
 
     @pytest.fixture
-    def retriever(self):
+    def retriever(self) -> Any:
         retriever = ChromaVectorHybridRetriever()
         retriever.vector_store = Mock()
         return retriever
 
-    def test_vector_search_error(self, retriever):
+    def test_vector_search_error(self, retriever: Any) -> None:
         """Test handling of vector search errors"""
         retriever.vector_store.similarity_search_with_score.side_effect = Exception("Vector search failed")
 
@@ -243,7 +244,7 @@ class TestErrorHandling:
         except Exception:
             pass  # Also acceptable behavior
 
-    def test_keyword_search_error(self, retriever):
+    def test_keyword_search_error(self, retriever: Any) -> None:
         """Test handling of keyword search errors"""
         retriever.bm25 = Mock()
         retriever.bm25.get_top_n.side_effect = Exception("BM25 search failed")
@@ -258,7 +259,7 @@ class TestErrorHandling:
 class TestIntegration:
     """Integration tests for hybrid retrieval"""
 
-    def test_full_pipeline(self):
+    def test_full_pipeline(self) -> None:
         """Test complete hybrid search pipeline"""
         # This would test with actual vector store if available
         # For now, we'll create a minimal retriever

@@ -2,6 +2,7 @@
 Unit tests for QuestionRewriter module
 """
 
+from typing import Any
 from unittest.mock import Mock, patch
 
 import pytest
@@ -12,16 +13,16 @@ class TestQuestionRewriter:
     """Test suite for QuestionRewriter class"""
 
     @pytest.fixture
-    def rewriter(self):
+    def rewriter(self) -> Any:
         """Create a QuestionRewriter instance for testing"""
         return QuestionRewriter()
 
-    def test_init(self, rewriter):
+    def test_init(self, rewriter: Any) -> None:
         """Test QuestionRewriter initialization"""
         assert rewriter is not None
         assert rewriter.llm is not None
 
-    def test_rewrite_empty_history(self, rewriter):
+    def test_rewrite_empty_history(self, rewriter: Any) -> None:
         """Test that question is NOT rewritten when chat history is empty"""
         question = "What are termination rights?"
         chat_history = None
@@ -33,16 +34,16 @@ class TestQuestionRewriter:
         assert result.no_rewrite_flag
         assert result.reason == "Empty chat history - no rewrite needed"
 
-    def test_rewrite_empty_list_history(self, rewriter):
+    def test_rewrite_empty_list_history(self, rewriter: Any) -> None:
         """Test that question is NOT rewritten when chat history is empty list"""
         question = "What are termination rights?"
-        chat_history = []
+        chat_history: list[Any] = []
 
         result = rewriter.rewrite(question, chat_history)
 
         assert result.no_rewrite_flag
 
-    def test_rewrite_independent_history(self, rewriter):
+    def test_rewrite_independent_history(self, rewriter: Any) -> None:
         """Test that question is NOT rewritten when question is independent of history"""
         question = "What is the weather today?"
         chat_history = [
@@ -56,7 +57,7 @@ class TestQuestionRewriter:
         assert result.no_rewrite_flag
 
     @patch('question_rewriter.ChatAnthropic')
-    def test_rewrite_relevant_history(self, mock_anthropic, rewriter):
+    def test_rewrite_relevant_history(self, mock_anthropic: Any, rewriter: Any) -> None:
         """Test that question IS rewritten when history is relevant"""
         # Setup mock
         mock_response = Mock()
@@ -79,7 +80,7 @@ class TestQuestionRewriter:
         # The actual rewritten text depends on LLM
         assert result.rewritten_question is not None
 
-    def test_rewrite_confidence_score(self, rewriter):
+    def test_rewrite_confidence_score(self, rewriter: Any) -> None:
         """Test that confidence scores are calculated"""
         question = "What is the effective date?"
         chat_history = None
@@ -89,7 +90,7 @@ class TestQuestionRewriter:
         assert hasattr(result, 'confidence')
         assert 0.0 <= result.confidence <= 1.0
 
-    def test_history_relevance_detection(self, rewriter):
+    def test_history_relevance_detection(self, rewriter: Any) -> None:
         """Test history relevance detection logic"""
         # Relevant history (contract-related)
         relevant_history = [
@@ -110,7 +111,7 @@ class TestQuestionRewriter:
 class TestRewriteResult:
     """Test suite for RewriteResult dataclass"""
 
-    def test_rewrite_result_creation(self):
+    def test_rewrite_result_creation(self) -> None:
         """Test RewriteResult object creation"""
         result = RewriteResult(
             original_question="What is X?",
@@ -126,7 +127,7 @@ class TestRewriteResult:
         assert result.reason == "Relevant history found"
         assert result.confidence == 0.85
 
-    def test_rewrite_result_defaults(self):
+    def test_rewrite_result_defaults(self) -> None:
         """Test RewriteResult with defaults"""
         result = RewriteResult(
             original_question="Test question",
@@ -142,10 +143,10 @@ class TestGuardrails:
     """Test the strict guardrails"""
 
     @pytest.fixture
-    def rewriter(self):
+    def rewriter(self) -> Any:
         return QuestionRewriter()
 
-    def test_guardrail_1_empty_history(self, rewriter):
+    def test_guardrail_1_empty_history(self, rewriter: Any) -> None:
         """GUARDRAIL 1: If chat history is empty → NO rewrite"""
         result = rewriter.rewrite("Any question", None)
         assert result.no_rewrite_flag
@@ -153,7 +154,7 @@ class TestGuardrails:
         result = rewriter.rewrite("Any question", [])
         assert result.no_rewrite_flag
 
-    def test_guardrail_2_independent_question(self, rewriter):
+    def test_guardrail_2_independent_question(self, rewriter: Any) -> None:
         """GUARDRAIL 2: If history and question are independent → NO rewrite"""
         history = [
             ("What is Python?", "A programming language"),
@@ -165,7 +166,7 @@ class TestGuardrails:
         # This should detect independence and not rewrite
         assert result.no_rewrite_flag
 
-    def test_guardrail_3_only_rewrite_relevant(self, rewriter):
+    def test_guardrail_3_only_rewrite_relevant(self, rewriter: Any) -> None:
         """GUARDRAIL 3: Only rewrite when history provides relevant context"""
         # Setup: History about contracts should allow rewrite for contract questions
         history = [
@@ -182,29 +183,29 @@ class TestEdgeCases:
     """Test edge cases and boundary conditions"""
 
     @pytest.fixture
-    def rewriter(self):
+    def rewriter(self) -> Any:
         return QuestionRewriter()
 
-    def test_very_long_question(self, rewriter):
+    def test_very_long_question(self, rewriter: Any) -> None:
         """Test with very long question"""
         long_question = "What is X?" * 100
         result = rewriter.rewrite(long_question, None)
         assert result is not None
 
-    def test_special_characters(self, rewriter):
+    def test_special_characters(self, rewriter: Any) -> None:
         """Test with special characters"""
         question = "What is §5.1(a) termination rights & conditions?"
         result = rewriter.rewrite(question, None)
         assert result.original_question == question
 
-    def test_multiple_turns_history(self, rewriter):
+    def test_multiple_turns_history(self, rewriter: Any) -> None:
         """Test with many conversation turns"""
         history = [(f"Q{i}", f"A{i}") for i in range(20)]
         question = "What is the pattern?"
         result = rewriter.rewrite(question, history)
         assert result is not None
 
-    def test_unicode_content(self, rewriter):
+    def test_unicode_content(self, rewriter: Any) -> None:
         """Test with unicode characters"""
         question = "What about café, naïve, and résumé?"
         result = rewriter.rewrite(question, None)

@@ -11,6 +11,7 @@ Usage:
 import argparse
 import sys
 from pathlib import Path
+from typing import Any
 
 from dotenv import load_dotenv
 
@@ -23,7 +24,7 @@ if env_path.exists():
 from intent_classifier import Intent, IntentClassifier  # noqa: E402  (.env must load first)
 
 
-def print_result(message: str, result):
+def print_result(message: str, result: Any) -> None:
     """Pretty print a classification result"""
     print(f"\n{'='*70}")
     print(f"Message: {message}")
@@ -35,7 +36,7 @@ def print_result(message: str, result):
     print(f"{'='*70}")
 
 
-def interactive_mode():
+def interactive_mode() -> None:
     """Interactive classification mode"""
     print("\n🤖 LegalLens Intent Classifier - Interactive Mode")
     print("=" * 70)
@@ -76,7 +77,7 @@ def interactive_mode():
             print("Please try again.\n")
 
 
-def batch_mode():
+def batch_mode() -> bool:
     """Run predefined test cases"""
     print("\n🤖 LegalLens Intent Classifier - Batch Test Mode")
     print("=" * 70 + "\n")
@@ -140,14 +141,14 @@ def batch_mode():
     return failed == 0
 
 
-def single_classification(message: str):
+def single_classification(message: str) -> None:
     """Classify a single message"""
     classifier = IntentClassifier()
     result = classifier.classify(message)
     print_result(message, result)
 
 
-def main():
+def main() -> None:
     parser = argparse.ArgumentParser(
         description="Manual testing script for LegalLens Intent Classifier"
     )
