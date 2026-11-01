@@ -1,0 +1,37 @@
+/*
+ * Design tokens. Colours are RGB triplets so Tailwind can apply opacity (bg-primary/10).
+ * Light theme only in v1; a dark theme would redefine these under [data-theme='dark'].
+ * Every text/background pair used in the UI meets WCAG 2.1 AA (NFR-13).
+ */
+:root {
+  --bg: 250 250 248;            /* #FAFAF8 warm off-white canvas */
+  --surface: 255 255 255;       /* #FFFFFF cards, composer, panels */
+  --sidebar: 244 243 239;       /* #F4F3EF */
+  --border: 230 228 222;        /* #E6E4DE hairlines */
+  --hover: 236 234 228;         /* #ECEAE4 row hover on sidebar */
+  --bubble: 239 237 231;        /* #EFEDE7 user message bubble */
+
+  --text: 28 27 25;             /* #1C1B19 — 16.9:1 on bg */
+  --text-muted: 99 96 90;       /* #63605A — 6.0:1 on bg */
+  --text-subtle: 128 124 116;   /* #807C74 — 4.1:1, icons & large text only */
+
+  --primary: 31 58 95;          /* #1F3A5F deep navy — 11.6:1 on white */
+  --primary-hover: 24 46 77;    /* #182E4D */
+  --primary-soft: 232 238 246;  /* #E8EEF6 selected / active */
+
+  --accent: 140 104 36;         /* #8C6824 muted brass — 5.0:1 on white */
+  --accent-soft: 248 241 226;   /* #F8F1E2 */
+
+  --highlight: 255 236 168;     /* #FFECA8 cited-span highlight */
+
+  --success: 34 109 66;         /* #226D42 */
+  --success-soft: 230 243 235;
+  --warning: 146 94 12;         /* #925E0C */
+  --warning-soft: 253 244 222;
+  --danger: 172 35 24;          /* #AC2318 */
+  --danger-soft: 252 235 233;
+
+  --sidebar-width: 268px;
+  --sources-width: 440px;
+  --radius: 10px;
+}

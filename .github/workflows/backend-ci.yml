@@ -1,0 +1,104 @@
+name: Backend CI
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: backend-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    working-directory: backend
+
+env:
+  UV_FROZEN: "1"
+  PYTHON_VERSION: "3.13"
+
+jobs:
+  test:
+    name: Unit tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+          cache-dependency-glob: backend/uv.lock
+
+      - name: Install dependencies
+        run: uv sync --python ${{ env.PYTHON_VERSION }}
+
+      - name: Run pytest with coverage and HTML report
+        run: |
+          uv run pytest \
+            --cov=app \
+            --cov-report=term \
+            --cov-report=html:htmlcov \
+            --html=reports/pytest-report.html \
+            --self-contained-html
+
+      - name: Upload test and coverage reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-test-reports
+          path: |
+            backend/reports/pytest-report.html
+            backend/htmlcov/
+          if-no-files-found: warn
+          retention-days: 14
+
+  lint:
+    name: Lint (ruff)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+          cache-dependency-glob: backend/uv.lock
+
+      - name: Install dependencies
+        run: uv sync --python ${{ env.PYTHON_VERSION }}
+
+      - name: ruff check
+        run: uv run ruff check .
+
+  typecheck:
+    name: Type check (mypy)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+          cache-dependency-glob: backend/uv.lock
+
+      - name: Install dependencies
+        run: uv sync --python ${{ env.PYTHON_VERSION }}
+
+      - name: mypy
+        run: uv run mypy
+
+  docker-build:
+    name: Docker image build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build backend image (not pushed)
+        working-directory: .
+        run: docker build -t legallens-backend:ci ./backend

@@ -1,0 +1,99 @@
+@import './tokens.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    font-feature-settings: 'cv11', 'ss01';
+  }
+  body {
+    @apply bg-bg font-sans text-[15px] leading-6 text-ink;
+  }
+  ::selection {
+    @apply bg-primary/15;
+  }
+  :focus-visible {
+    @apply outline-none ring-2 ring-primary/50 ring-offset-1 ring-offset-bg;
+  }
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: rgb(var(--border)) transparent;
+  }
+}
+
+@layer components {
+  .skip-link {
+    @apply sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:z-[100] focus:rounded-lg focus:bg-surface focus:px-3 focus:py-2 focus:shadow-pop;
+  }
+
+  /* Answer and draft typography — serif reads like the documents it quotes. */
+  .answer {
+    @apply prose prose-stone max-w-none font-serif text-[16.5px] leading-[1.7] text-ink;
+    --tw-prose-bullets: rgb(var(--text-subtle));
+    --tw-prose-headings: rgb(var(--text));
+    --tw-prose-bold: rgb(var(--text));
+  }
+  .answer :where(p, ul, ol) {
+    @apply my-3;
+  }
+  .answer :where(li) {
+    @apply my-1.5;
+  }
+  .answer :where(h1) {
+    @apply mb-4 mt-2 font-serif text-2xl font-semibold leading-snug;
+  }
+  .answer :where(h2) {
+    @apply mb-2 mt-7 font-sans text-[13px] font-semibold uppercase tracking-[0.06em] text-muted;
+  }
+
+  /* Blinking caret after the last block while a response streams. */
+  .stream-cursor > :last-child:not(ul):not(ol)::after,
+  .stream-cursor > :is(ul, ol):last-child > li:last-child::after {
+    content: '';
+    display: inline-block;
+    width: 0.45em;
+    height: 1.05em;
+    margin-left: 2px;
+    vertical-align: -0.15em;
+    border-radius: 1px;
+    background: rgb(var(--primary));
+    animation: blink 1s step-end infinite;
+  }
+
+  .shimmer-text {
+    background: linear-gradient(90deg, rgb(var(--text-muted)) 0%, rgb(var(--text-muted)) 40%, rgb(var(--text-subtle) / 0.5) 50%, rgb(var(--text-muted)) 60%, rgb(var(--text-muted)) 100%);
+    background-size: 200% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    animation: shimmer 1.6s linear infinite;
+  }
+
+  .skeleton {
+    @apply rounded-md;
+    background: linear-gradient(90deg, rgb(var(--border) / 0.6) 0%, rgb(var(--border)) 50%, rgb(var(--border) / 0.6) 100%);
+    background-size: 200% 100%;
+    animation: shimmer 1.6s linear infinite;
+  }
+
+  .source-text mark {
+    @apply rounded-[3px] bg-highlight px-0.5 text-ink;
+    box-shadow: 0 0 0 2px rgb(var(--highlight));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
